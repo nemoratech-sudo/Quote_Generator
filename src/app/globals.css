@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+:root {
+  --forest: #1b4332;
+  --forest-deep: #0f2b20;
+  --sage: #d8f3dc;
+  --sage-soft: #eefaf1;
+  --gold: #c9a227;
+  --gold-deep: #a8841a;
+  --charcoal: #1f2933;
+  --background: #eefaf1;
+  --foreground: #1f2933;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-forest: var(--forest);
+  --color-forest-deep: var(--forest-deep);
+  --color-sage: var(--sage);
+  --color-sage-soft: var(--sage-soft);
+  --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
+  --color-charcoal: var(--charcoal);
+  --font-sans: var(--font-dm-sans);
+  --font-serif: var(--font-cormorant);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-serif {
+  font-family: var(--font-cormorant), ui-serif, Georgia, serif;
+}
+
+.page-atmosphere {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(216, 243, 220, 0.95), transparent 55%),
+    radial-gradient(ellipse 45% 40% at 100% 20%, rgba(201, 162, 39, 0.12), transparent 50%),
+    radial-gradient(ellipse 40% 35% at 0% 80%, rgba(27, 67, 50, 0.08), transparent 45%),
+    linear-gradient(180deg, #f4fbf6 0%, #eefaf1 45%, #e8f6ec 100%);
+  min-height: 100vh;
+}
+
+@media print {
+  @page {
+    margin: 16mm;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .page-atmosphere {
+    background: white !important;
+    min-height: auto;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .quote-sheet {
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
