@@ -3,48 +3,51 @@
     "id": "basic",
     "name": "Basic",
     "price": "₹5,000",
+    "baseAmount": 5000,
     "medal": "🥉",
     "features": [
-      "3–4 pages",
-      "Responsive design",
-      "Business details",
-      "Photos / Gallery",
-      "WhatsApp button",
-      "Google Maps",
-      "Basic SEO"
+      { "description": "3–4 pages", "amount": 1200 },
+      { "description": "Responsive design", "amount": 800 },
+      { "description": "Business details", "amount": 500 },
+      { "description": "Photos / Gallery", "amount": 700 },
+      { "description": "WhatsApp button", "amount": 400 },
+      { "description": "Google Maps", "amount": 400 },
+      { "description": "Basic SEO", "amount": 1000 }
     ]
   },
   {
     "id": "standard",
     "name": "Standard",
     "price": "₹8,500",
+    "baseAmount": 8500,
     "medal": "🥈",
     "features": [
-      "5–7 pages",
-      "Custom modern design",
-      "Gallery / Services / Products",
-      "Contact form",
-      "WhatsApp & Google Maps",
-      "Basic SEO",
-      "Social media integration"
+      { "description": "5–7 pages", "amount": 1800 },
+      { "description": "Custom modern design", "amount": 1500 },
+      { "description": "Gallery / Services / Products", "amount": 1200 },
+      { "description": "Contact form", "amount": 900 },
+      { "description": "WhatsApp & Google Maps", "amount": 800 },
+      { "description": "Basic SEO", "amount": 1000 },
+      { "description": "Social media integration", "amount": 1300 }
     ]
   },
   {
     "id": "premium",
     "name": "Premium",
     "price": "₹12,000+",
+    "baseAmount": 12000,
     "medal": "🥇",
     "highlighted": true,
     "features": [
-      "7+ pages",
-      "Premium custom design",
-      "Admin panel / Content management",
-      "Dynamic features",
-      "WhatsApp & Contact integration",
-      "Google Maps",
-      "Basic SEO",
-      "Performance optimization",
-      "Hosting included"
+      { "description": "7+ pages", "amount": 2000 },
+      { "description": "Premium custom design", "amount": 2000 },
+      { "description": "Admin panel / Content management", "amount": 2000 },
+      { "description": "Dynamic features", "amount": 1500 },
+      { "description": "WhatsApp & Contact integration", "amount": 1000 },
+      { "description": "Google Maps", "amount": 500 },
+      { "description": "Basic SEO", "amount": 1000 },
+      { "description": "Performance optimization", "amount": 1000 },
+      { "description": "Hosting included", "amount": 1000 }
     ]
   }
 ]

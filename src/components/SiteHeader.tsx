@@ -17,16 +17,22 @@ export default function SiteHeader({ compact = false }: SiteHeaderProps) {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-2 sm:gap-3">
+        <nav className="flex items-center gap-1 sm:gap-3">
           <Link
-            href="/quotes"
-            className="rounded-full px-3 py-2 text-sm font-medium text-charcoal/70 transition hover:bg-white/70 hover:text-forest"
+            href="/admin"
+            className="rounded-full px-2.5 py-2 text-sm font-medium text-charcoal/70 transition hover:bg-white/70 hover:text-forest sm:px-3"
           >
-            Saved quotes
+            Admin
           </Link>
           <Link
-            href="/quote/new"
-            className="rounded-full bg-forest px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-deep"
+            href="/quotes"
+            className="rounded-full px-2.5 py-2 text-sm font-medium text-charcoal/70 transition hover:bg-white/70 hover:text-forest sm:px-3"
+          >
+            Saved
+          </Link>
+          <Link
+            href="/"
+            className="rounded-full bg-forest px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-forest-deep sm:px-4"
           >
             New quote
           </Link>

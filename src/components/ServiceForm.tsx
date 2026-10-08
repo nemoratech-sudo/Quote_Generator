@@ -32,14 +32,14 @@ export default function ServiceForm({ initial, onContinue }: ServiceFormProps) {
     <form onSubmit={handleSubmit} className="mx-auto w-full max-w-2xl">
       <div className="mb-10 text-center">
         <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-forest/70">
-          Step 1 of 3
+          Step 1 of 4
         </p>
         <h1 className="font-serif text-4xl leading-tight text-forest sm:text-5xl">
           What are we quoting?
         </h1>
         <p className="mx-auto mt-4 max-w-md text-base text-charcoal/65">
-          Tell us the service or business type. Package deliverables stay fixed —
-          only the quote title changes.
+          Name the business or project. Next you&apos;ll capture client requirements, then
+          choose a package optimized to that brief.
         </p>
       </div>
 

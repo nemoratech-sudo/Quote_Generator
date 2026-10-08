@@ -47,25 +47,61 @@ body {
 
 @media print {
   @page {
-    margin: 16mm;
+    margin: 12mm;
   }
 
+  html,
   body {
     background: white !important;
     color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .page-atmosphere {
     background: white !important;
-    min-height: auto;
+    min-height: auto !important;
   }
 
   .print\:hidden {
     display: none !important;
   }
 
+  .print\:table {
+    display: table !important;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  .print\:flex {
+    display: flex !important;
+  }
+
   .quote-sheet {
     box-shadow: none !important;
     border: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  .quote-header {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .quote-total-card {
+    background: #1b4332 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .quote-sheet input,
+  .quote-sheet button,
+  .quote-sheet form,
+  .quote-sheet label:has(input[type="checkbox"]) {
+    display: none !important;
   }
 }
