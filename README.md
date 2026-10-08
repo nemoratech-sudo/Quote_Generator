@@ -61,7 +61,6 @@ npm start
 
 ## Flow
 
-1. **Chat** — type the service (e.g. Coffee shop) on the home chatbot
-2. **Optimize** — pick requirement tags for this client
-3. **Package** — select Basic / Standard / Premium (best-fit shown)
-4. **PDF** — enter client name + mobile on the quote sheet, then Download PDF / Save
+1. **Chat** — type the business, choose Website / App / Both, multi-select outcomes (all in chat)
+2. **Package** — best-fit Basic / Standard / Premium from those outcomes
+3. **PDF** — enter client name + mobile, then Download PDF / Save

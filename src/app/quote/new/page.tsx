@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import BriefForm from "@/components/BriefForm";
 import ChatService from "@/components/ChatService";
 import PackageCards from "@/components/PackageCards";
 import SiteHeader from "@/components/SiteHeader";
@@ -12,26 +11,28 @@ import { clearWorkingQuote, loadDraft, saveDraft } from "@/lib/storage";
 import type { PackageId, QuoteDraft, QuoteStep } from "@/lib/types";
 
 function migrateStep(step: string | undefined): QuoteStep {
-  if (step === "service" || step === "chat") return "chat";
-  if (step === "brief" || step === "optimize") return "optimize";
+  if (step === "service" || step === "chat" || step === "brief" || step === "optimize") {
+    return "chat";
+  }
   if (step === "package") return "package";
   if (step === "client" || step === "quote") return "quote";
   return "chat";
 }
 
 function resolveStep(loaded: QuoteDraft, stepParam: string | null): QuoteStep {
+  // Old optimize URLs → send to package if chat already done, else chat
+  if (stepParam === "optimize" || stepParam === "brief") {
+    if (loaded.service.trim() && loaded.requirementTags.length > 0) return "package";
+    return "chat";
+  }
+
   if (!loaded.service.trim()) return "chat";
 
   const requested = migrateStep(stepParam ?? loaded.step);
-
   if (requested === "chat") return "chat";
-  if (requested === "optimize") return "optimize";
   if (requested === "package") return "package";
-  // Old "client" links → send to package; quote opens via preview route
-  if (requested === "quote") {
-    return loaded.packageId ? "package" : "package";
-  }
-  return "optimize";
+  if (requested === "quote") return loaded.packageId ? "package" : "package";
+  return "chat";
 }
 
 function NewQuoteContent() {
@@ -41,9 +42,10 @@ function NewQuoteContent() {
 
   useEffect(() => {
     const loaded = loadDraft();
-    if (!("mobile" in loaded) || loaded.mobile === undefined) {
-      loaded.mobile = "";
-    }
+    if (!loaded.mobile) loaded.mobile = "";
+    if (loaded.productType === undefined) loaded.productType = null;
+    if (!Array.isArray(loaded.outcomeIds)) loaded.outcomeIds = [];
+
     const step = resolveStep(loaded, searchParams.get("step"));
     loaded.step = step === "quote" ? "package" : step;
     setDraft(loaded);
@@ -67,18 +69,16 @@ function NewQuoteContent() {
     );
   }
 
-  const optimizeDone =
-    draft.step === "package" ||
-    draft.step === "quote" ||
-    searchParams.get("step") === "package";
+  const chatDone =
+    draft.service.trim().length > 0 &&
+    (draft.requirementTags.length > 0 || draft.outcomeIds.length > 0 || draft.productType !== null);
 
   return (
     <>
       <div className="mb-8 sm:mb-10">
         <Stepper
           current={draft.step === "quote" ? "package" : draft.step}
-          serviceReady={draft.service.trim().length > 0}
-          optimizeReady={optimizeDone || draft.step === "optimize"}
+          serviceReady={chatDone || draft.step === "package"}
           packageReady={draft.packageId !== null}
         />
       </div>
@@ -86,28 +86,14 @@ function NewQuoteContent() {
       {draft.step === "chat" && (
         <ChatService
           initialService={draft.service}
-          onSubmitService={(service) => {
+          onComplete={(result) => {
             updateDraft({
-              service,
-              step: "optimize",
-            });
-            router.replace("/quote/new?step=optimize");
-          }}
-        />
-      )}
-
-      {draft.step === "optimize" && (
-        <BriefForm
-          initial={draft}
-          onBack={() => {
-            updateDraft({ step: "chat" });
-            router.replace("/quote/new?step=chat");
-          }}
-          onContinue={({ briefNotes, requirementTags, optimizeForRequirements }) => {
-            updateDraft({
-              briefNotes,
-              requirementTags,
-              optimizeForRequirements,
+              service: result.service,
+              briefNotes: result.briefNotes,
+              requirementTags: result.requirementTags,
+              optimizeForRequirements: true,
+              productType: result.productType,
+              outcomeIds: result.outcomeIds,
               step: "package",
             });
             router.replace("/quote/new?step=package");

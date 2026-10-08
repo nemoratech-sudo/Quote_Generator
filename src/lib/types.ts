@@ -1,6 +1,8 @@
 export type PackageId = "basic" | "standard" | "premium";
 
-export type QuoteStep = "chat" | "optimize" | "package" | "quote";
+export type QuoteStep = "chat" | "package" | "quote";
+
+export type ProductType = "web" | "app" | "both";
 
 export type QuoteStatus = "draft" | "sent" | "revision" | "accepted" | "declined";
 
@@ -44,6 +46,8 @@ export interface QuoteDraft {
   requirementTags: RequirementTagId[];
   /** When true, buildQuote applies requirement optimization */
   optimizeForRequirements: boolean;
+  productType: ProductType | null;
+  outcomeIds: string[];
 }
 
 export interface QuoteLineItem {
@@ -82,6 +86,8 @@ export interface Quote {
   briefNotes: string;
   requirementTags: RequirementTagId[];
   statusUpdatedAt: string;
+  productType: ProductType | null;
+  outcomeIds: string[];
 }
 
 export interface AppSettings {

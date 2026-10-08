@@ -49,6 +49,8 @@ export default function SavedQuoteDetailPage() {
       briefNotes: found.briefNotes,
       requirementTags: found.requirementTags,
       optimizeForRequirements: true,
+      productType: found.productType ?? null,
+      outcomeIds: found.outcomeIds ?? [],
     });
   }, [id]);
 
@@ -91,6 +93,8 @@ export default function SavedQuoteDetailPage() {
       briefNotes: revision.briefNotes,
       requirementTags: revision.requirementTags,
       optimizeForRequirements: true,
+      productType: revision.productType,
+      outcomeIds: revision.outcomeIds,
     });
     router.push(`/quotes/${encodeURIComponent(revision.id)}`);
   }

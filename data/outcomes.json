@@ -1,0 +1,200 @@
+{
+  "platforms": [
+    { "id": "web", "label": "Website", "hint": "Google, WhatsApp, mobile site" },
+    { "id": "app", "label": "Mobile app", "hint": "Orders & offers on phone" },
+    { "id": "both", "label": "Website + App", "hint": "Discover online, retain in app" }
+  ],
+  "niches": [
+    {
+      "id": "cafe",
+      "keywords": ["coffee", "cafe", "café", "tea", "bakery", "ice cream", "dessert", "restaurant", "food", "juice", "snack"],
+      "web": [
+        { "id": "menu", "label": "Show menu & photos", "tags": ["gallery", "products"] },
+        { "id": "wa_order", "label": "WhatsApp orders", "tags": ["whatsapp", "online_menu"] },
+        { "id": "maps", "label": "Show on Google Maps", "tags": ["maps"] },
+        { "id": "seo", "label": "Get found on Google", "tags": ["seo"] },
+        { "id": "contact", "label": "Contact / enquiry form", "tags": ["contact_form"] },
+        { "id": "hours", "label": "Opening hours & branches", "tags": ["products"] },
+        { "id": "offers_web", "label": "Today’s offers / combos", "tags": ["products", "social"] },
+        { "id": "social", "label": "Instagram / social links", "tags": ["social"] },
+        { "id": "reviews", "label": "Customer reviews section", "tags": ["gallery", "social"] },
+        { "id": "events", "label": "Events / live music page", "tags": ["products", "gallery"] },
+        { "id": "delivery", "label": "Delivery partner links", "tags": ["products", "whatsapp"] },
+        { "id": "cms", "label": "Easy menu updates (CMS)", "tags": ["cms"] }
+      ],
+      "app": [
+        { "id": "app_order", "label": "Order from phone", "tags": ["online_menu", "products"] },
+        { "id": "offers", "label": "Offers & loyalty points", "tags": ["dynamic", "social"] },
+        { "id": "app_maps", "label": "Store location & directions", "tags": ["maps"] },
+        { "id": "app_wa", "label": "WhatsApp support", "tags": ["whatsapp"] },
+        { "id": "app_menu", "label": "Digital menu with prices", "tags": ["products", "gallery"] },
+        { "id": "app_cart", "label": "Cart & reorder favourites", "tags": ["dynamic", "online_menu"] },
+        { "id": "app_notify", "label": "Push for new dishes / deals", "tags": ["dynamic"] },
+        { "id": "app_table", "label": "Table / pickup booking", "tags": ["contact_form", "dynamic"] },
+        { "id": "app_pay", "label": "Simple pay / pay later note", "tags": ["dynamic", "products"] }
+      ]
+    },
+    {
+      "id": "salon",
+      "keywords": ["salon", "spa", "beauty", "parlour", "parlor", "hair", "nail", "makeup"],
+      "web": [
+        { "id": "services", "label": "Show services & prices", "tags": ["products", "gallery"] },
+        { "id": "booking", "label": "Booking / enquiry form", "tags": ["contact_form"] },
+        { "id": "wa", "label": "WhatsApp booking", "tags": ["whatsapp"] },
+        { "id": "maps", "label": "Show on Google Maps", "tags": ["maps"] },
+        { "id": "seo", "label": "Get found on Google", "tags": ["seo"] },
+        { "id": "gallery", "label": "Before / after gallery", "tags": ["gallery"] },
+        { "id": "stylists", "label": "Stylist / team profiles", "tags": ["products", "gallery"] },
+        { "id": "packages", "label": "Packages & memberships", "tags": ["products"] },
+        { "id": "social", "label": "Instagram / social links", "tags": ["social"] },
+        { "id": "cms", "label": "Update offers yourself (CMS)", "tags": ["cms"] }
+      ],
+      "app": [
+        { "id": "app_book", "label": "Book appointments", "tags": ["contact_form", "dynamic"] },
+        { "id": "app_offers", "label": "Offers & reminders", "tags": ["dynamic", "social"] },
+        { "id": "app_gallery", "label": "Style gallery", "tags": ["gallery"] },
+        { "id": "app_services", "label": "Service menu on phone", "tags": ["products"] },
+        { "id": "app_stylist", "label": "Choose preferred stylist", "tags": ["products", "dynamic"] },
+        { "id": "app_loyalty", "label": "Loyalty / visit history", "tags": ["dynamic"] },
+        { "id": "app_wa", "label": "WhatsApp chat support", "tags": ["whatsapp"] }
+      ]
+    },
+    {
+      "id": "clinic",
+      "keywords": ["clinic", "hospital", "doctor", "dental", "medical", "health", "physio", "lab"],
+      "web": [
+        { "id": "services", "label": "Services & doctors", "tags": ["products", "gallery"] },
+        { "id": "appoint", "label": "Appointment form", "tags": ["contact_form"] },
+        { "id": "wa", "label": "WhatsApp enquire", "tags": ["whatsapp"] },
+        { "id": "maps", "label": "Clinic location", "tags": ["maps"] },
+        { "id": "seo", "label": "Get found on Google", "tags": ["seo"] },
+        { "id": "timing", "label": "Timings & emergency note", "tags": ["products"] },
+        { "id": "facilities", "label": "Facilities / equipment photos", "tags": ["gallery"] },
+        { "id": "testimonials", "label": "Patient testimonials", "tags": ["social", "gallery"] },
+        { "id": "insurance", "label": "Insurance / billing info", "tags": ["products"] },
+        { "id": "cms", "label": "Update doctors & slots (CMS)", "tags": ["cms"] }
+      ],
+      "app": [
+        { "id": "app_book", "label": "Book appointments", "tags": ["contact_form", "dynamic"] },
+        { "id": "app_remind", "label": "Visit reminders", "tags": ["dynamic"] },
+        { "id": "app_info", "label": "Doctor / service list", "tags": ["products"] },
+        { "id": "app_reports", "label": "Reports / prescription note", "tags": ["dynamic", "cms"] },
+        { "id": "app_queue", "label": "Token / queue status", "tags": ["dynamic"] },
+        { "id": "app_wa", "label": "WhatsApp support", "tags": ["whatsapp"] },
+        { "id": "app_maps", "label": "Directions to clinic", "tags": ["maps"] }
+      ]
+    },
+    {
+      "id": "shop",
+      "keywords": ["shop", "store", "retail", "boutique", "mart", "grocery", "fashion"],
+      "web": [
+        { "id": "catalog", "label": "Product / gallery showcase", "tags": ["gallery", "products"] },
+        { "id": "wa", "label": "WhatsApp enquiry", "tags": ["whatsapp"] },
+        { "id": "maps", "label": "Store on Maps", "tags": ["maps"] },
+        { "id": "seo", "label": "Get found on Google", "tags": ["seo"] },
+        { "id": "social", "label": "Social media links", "tags": ["social"] },
+        { "id": "categories", "label": "Category / collection pages", "tags": ["products"] },
+        { "id": "new_arrivals", "label": "New arrivals section", "tags": ["products", "gallery"] },
+        { "id": "form", "label": "Bulk / wholesale enquiry", "tags": ["contact_form"] },
+        { "id": "cms", "label": "Update catalogue (CMS)", "tags": ["cms"] },
+        { "id": "perf", "label": "Fast loading product pages", "tags": ["performance"] }
+      ],
+      "app": [
+        { "id": "app_catalog", "label": "Browse products", "tags": ["products", "gallery"] },
+        { "id": "app_order", "label": "Enquire / order", "tags": ["whatsapp", "online_menu"] },
+        { "id": "app_offers", "label": "Offers push", "tags": ["dynamic", "social"] },
+        { "id": "app_wishlist", "label": "Wishlist / favourites", "tags": ["dynamic"] },
+        { "id": "app_search", "label": "Search products", "tags": ["products", "dynamic"] },
+        { "id": "app_maps", "label": "Store locator", "tags": ["maps"] },
+        { "id": "app_wa", "label": "Chat with store", "tags": ["whatsapp"] }
+      ]
+    },
+    {
+      "id": "gym",
+      "keywords": ["gym", "fitness", "yoga", "crossfit", "workout"],
+      "web": [
+        { "id": "plans", "label": "Membership plans & prices", "tags": ["products"] },
+        { "id": "classes", "label": "Class / trainer schedule", "tags": ["products", "gallery"] },
+        { "id": "join", "label": "Join / enquiry form", "tags": ["contact_form"] },
+        { "id": "wa", "label": "WhatsApp enquire", "tags": ["whatsapp"] },
+        { "id": "maps", "label": "Gym location", "tags": ["maps"] },
+        { "id": "seo", "label": "Get found on Google", "tags": ["seo"] },
+        { "id": "gallery", "label": "Facility photos", "tags": ["gallery"] },
+        { "id": "social", "label": "Social / transformation posts", "tags": ["social"] }
+      ],
+      "app": [
+        { "id": "app_plans", "label": "View / renew plans", "tags": ["products", "dynamic"] },
+        { "id": "app_class", "label": "Book classes", "tags": ["contact_form", "dynamic"] },
+        { "id": "app_remind", "label": "Workout reminders", "tags": ["dynamic"] },
+        { "id": "app_trainer", "label": "Trainer profiles", "tags": ["products", "gallery"] },
+        { "id": "app_wa", "label": "WhatsApp with gym", "tags": ["whatsapp"] }
+      ]
+    },
+    {
+      "id": "education",
+      "keywords": ["school", "college", "tuition", "coaching", "academy", "institute", "education"],
+      "web": [
+        { "id": "courses", "label": "Courses & fees overview", "tags": ["products"] },
+        { "id": "admit", "label": "Admission / enquiry form", "tags": ["contact_form"] },
+        { "id": "wa", "label": "WhatsApp enquire", "tags": ["whatsapp"] },
+        { "id": "maps", "label": "Campus location", "tags": ["maps"] },
+        { "id": "seo", "label": "Get found on Google", "tags": ["seo"] },
+        { "id": "gallery", "label": "Campus / event gallery", "tags": ["gallery"] },
+        { "id": "faculty", "label": "Faculty / mentors", "tags": ["products", "gallery"] },
+        { "id": "results", "label": "Results / highlights", "tags": ["social", "gallery"] },
+        { "id": "cms", "label": "Update notices (CMS)", "tags": ["cms"] }
+      ],
+      "app": [
+        { "id": "app_notice", "label": "Notices & timetable", "tags": ["dynamic", "cms"] },
+        { "id": "app_admit", "label": "Admission enquire", "tags": ["contact_form", "whatsapp"] },
+        { "id": "app_fees", "label": "Fee / course info", "tags": ["products"] },
+        { "id": "app_gallery", "label": "Event gallery", "tags": ["gallery"] },
+        { "id": "app_notify", "label": "Push for exam / events", "tags": ["dynamic"] }
+      ]
+    },
+    {
+      "id": "realestate",
+      "keywords": ["real estate", "property", "builder", "apartment", "housing", "plot"],
+      "web": [
+        { "id": "listings", "label": "Project / property listings", "tags": ["products", "gallery"] },
+        { "id": "enquire", "label": "Site visit enquiry form", "tags": ["contact_form"] },
+        { "id": "wa", "label": "WhatsApp enquire", "tags": ["whatsapp"] },
+        { "id": "maps", "label": "Project location maps", "tags": ["maps"] },
+        { "id": "seo", "label": "Get found on Google", "tags": ["seo"] },
+        { "id": "brochure", "label": "Brochure / floor plans", "tags": ["gallery", "products"] },
+        { "id": "amenities", "label": "Amenities showcase", "tags": ["gallery"] },
+        { "id": "cms", "label": "Update listings (CMS)", "tags": ["cms"] }
+      ],
+      "app": [
+        { "id": "app_list", "label": "Browse properties", "tags": ["products", "gallery"] },
+        { "id": "app_filter", "label": "Filter by budget / type", "tags": ["dynamic", "products"] },
+        { "id": "app_visit", "label": "Request site visit", "tags": ["contact_form", "whatsapp"] },
+        { "id": "app_notify", "label": "New project alerts", "tags": ["dynamic"] },
+        { "id": "app_maps", "label": "Map of projects", "tags": ["maps"] }
+      ]
+    }
+  ],
+  "fallback": {
+    "web": [
+      { "id": "pages", "label": "Business pages & details", "tags": ["gallery"] },
+      { "id": "wa", "label": "WhatsApp button", "tags": ["whatsapp"] },
+      { "id": "maps", "label": "Google Maps", "tags": ["maps"] },
+      { "id": "seo", "label": "Get found on Google", "tags": ["seo"] },
+      { "id": "form", "label": "Contact form", "tags": ["contact_form"] },
+      { "id": "gallery", "label": "Photo gallery", "tags": ["gallery"] },
+      { "id": "social", "label": "Social media links", "tags": ["social"] },
+      { "id": "services", "label": "Services / products list", "tags": ["products"] },
+      { "id": "cms", "label": "Easy content updates (CMS)", "tags": ["cms"] },
+      { "id": "perf", "label": "Fast & mobile-friendly site", "tags": ["performance"] }
+    ],
+    "app": [
+      { "id": "app_core", "label": "Core app screens", "tags": ["products", "dynamic"] },
+      { "id": "app_wa", "label": "WhatsApp support", "tags": ["whatsapp"] },
+      { "id": "app_notify", "label": "Updates / offers push", "tags": ["dynamic", "social"] },
+      { "id": "app_form", "label": "In-app enquiry", "tags": ["contact_form"] },
+      { "id": "app_gallery", "label": "Photo / media gallery", "tags": ["gallery"] },
+      { "id": "app_maps", "label": "Location & directions", "tags": ["maps"] },
+      { "id": "app_profile", "label": "Simple user profile", "tags": ["dynamic"] }
+    ]
+  }
+}

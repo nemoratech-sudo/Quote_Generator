@@ -56,6 +56,8 @@ export function createEmptyDraft(): QuoteDraft {
     briefNotes: "",
     requirementTags: [],
     optimizeForRequirements: true,
+    productType: null,
+    outcomeIds: [],
   };
 }
 
@@ -191,6 +193,8 @@ export function buildQuote(draft: QuoteDraft, quoteId?: string): Quote {
     briefNotes: (draft.briefNotes ?? "").trim(),
     requirementTags: tags,
     statusUpdatedAt: createdAt,
+    productType: draft.productType ?? null,
+    outcomeIds: draft.outcomeIds ?? [],
   };
 
   return withRecalculatedTotal(quote);
@@ -309,6 +313,8 @@ export function normalizeQuote(raw: Partial<Quote> & { features?: unknown[] }): 
       ? (raw.requirementTags as RequirementTagId[])
       : [],
     statusUpdatedAt: raw.statusUpdatedAt ?? createdAt,
+    productType: raw.productType ?? null,
+    outcomeIds: Array.isArray(raw.outcomeIds) ? raw.outcomeIds : [],
   };
 
   return withRecalculatedTotal(base);

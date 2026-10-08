@@ -32,7 +32,6 @@ export default function QuotePreviewPage() {
   const [message, setMessage] = useState("");
   const [stepperReady, setStepperReady] = useState({
     serviceReady: false,
-    optimizeReady: false,
     packageReady: false,
   });
   const assignedId = useRef(false);
@@ -43,7 +42,6 @@ export default function QuotePreviewPage() {
       const draft = loadDraft();
       setStepperReady({
         serviceReady: draft.service.trim().length > 0,
-        optimizeReady: true,
         packageReady: draft.packageId !== null,
       });
 
@@ -138,6 +136,8 @@ export default function QuotePreviewPage() {
       briefNotes: revision.briefNotes,
       requirementTags: revision.requirementTags,
       optimizeForRequirements: true,
+      productType: revision.productType,
+      outcomeIds: revision.outcomeIds,
     });
     setQuote(revision);
     setSavedFingerprint(quotesFingerprint(revision));
@@ -188,7 +188,6 @@ export default function QuotePreviewPage() {
           <Stepper
             current="quote"
             serviceReady={stepperReady.serviceReady}
-            optimizeReady={stepperReady.optimizeReady}
             packageReady={stepperReady.packageReady}
           />
         </div>

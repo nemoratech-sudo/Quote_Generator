@@ -33,6 +33,8 @@ function draftFromQuote(quote: Quote) {
     briefNotes: quote.briefNotes,
     requirementTags: quote.requirementTags,
     optimizeForRequirements: true,
+    productType: quote.productType ?? null,
+    outcomeIds: quote.outcomeIds ?? [],
   };
 }
 
@@ -73,7 +75,7 @@ export default function SavedQuotesPage() {
   function handleEdit(quote: Quote) {
     saveDraft({
       ...draftFromQuote(quote),
-      step: "optimize",
+      step: "package",
     });
   }
 
@@ -212,7 +214,7 @@ export default function SavedQuotesPage() {
           <div className="rounded-[1.5rem] border border-dashed border-forest/25 bg-white/70 px-8 py-16 text-center">
             <p className="font-serif text-2xl text-forest">Your quote library is empty</p>
             <p className="mx-auto mt-2 max-w-md text-charcoal/60">
-              Capture a client brief, generate an optimized quote, then Save.
+              Chat the brief, pick a package, generate the PDF, then Save.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link
@@ -283,7 +285,7 @@ export default function SavedQuotesPage() {
                     Open
                   </Link>
                   <Link
-                    href="/quote/new?step=optimize"
+                    href="/quote/new?step=package"
                     onClick={() => handleEdit(quote)}
                     className="text-xs font-semibold text-forest hover:underline"
                   >

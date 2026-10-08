@@ -67,7 +67,7 @@ export default function PackageCards({
     <div className="mx-auto w-full max-w-6xl">
       <div className="mb-8 text-center">
         <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-forest/70">
-          Step 3 of 4
+          Step 2 of 3
         </p>
         <h1 className="font-serif text-4xl leading-tight text-forest sm:text-5xl">
           Select a package

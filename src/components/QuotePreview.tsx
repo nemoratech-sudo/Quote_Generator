@@ -13,6 +13,7 @@ import {
   STATUS_LABELS,
   withRecalculatedTotal,
 } from "@/lib/quote";
+import { platformLabel } from "@/lib/outcomes";
 import { tagsLabelList } from "@/lib/requirements";
 import type { Quote, QuoteLineItem, QuoteStatus } from "@/lib/types";
 
@@ -185,7 +186,7 @@ export default function QuotePreview({
           {showStepHeading ? (
             <div>
               <p className="mb-1 text-sm font-semibold uppercase tracking-[0.2em] text-forest/70">
-                Step 4 of 4 · PDF
+                Step 3 of 3 · PDF
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="font-serif text-3xl text-forest sm:text-4xl">Your quotation</h1>
@@ -238,7 +239,7 @@ export default function QuotePreview({
                 onClick={handleReset}
                 className="rounded-full border border-charcoal/15 bg-white px-4 py-2.5 text-sm font-semibold text-charcoal transition hover:border-forest/30 hover:text-forest"
               >
-                Re-optimize
+                Reset package
               </button>
             )}
             {onStatusChange && quote.status !== "sent" && quote.status !== "accepted" && (
@@ -329,6 +330,11 @@ export default function QuotePreview({
             >
               {quote.packageName}
             </span>
+            {quote.productType && (
+              <span className="rounded-md bg-charcoal/8 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-charcoal/70">
+                {platformLabel(quote.productType)}
+              </span>
+            )}
           </div>
 
           {(quote.briefNotes || quote.requirementTags.length > 0) && (
