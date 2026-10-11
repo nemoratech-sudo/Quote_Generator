@@ -1,0 +1,11 @@
+{
+  "quickActions": [
+    { "label": "Help", "message": "help" },
+    { "label": "List all services", "message": "list all services" },
+    { "label": "Website vs app", "message": "website vs app" },
+    { "label": "Packages & pricing", "message": "how do packages work" },
+    { "label": "E-commerce?", "message": "do you do ecommerce" },
+    { "label": "Vanakkam", "message": "vanakkam" },
+    { "label": "Ella services", "message": "ella service list pannu" }
+  ]
+}

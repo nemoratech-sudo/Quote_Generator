@@ -2,12 +2,34 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import {
-  listOutcomes,
+  allNicheOptions,
+  commonOutcomeIds,
+  listOutcomesForNiche,
+  nicheLabel,
   outcomesToTags,
   PLATFORM_OPTIONS,
   platformLabel,
   type OutcomeOption,
+  type ServiceAnalysis,
 } from "@/lib/outcomes";
+import {
+  analyzingMessage,
+  CHAT_QUICK_ACTIONS,
+  classifyUserInput,
+  explainAfterAnalysis,
+  isGuideIntent,
+  NICHE_PICK_EXAMPLES,
+  nicheConfirmPrompt,
+  replyForIntent,
+  SERVICE_SUGGESTIONS,
+  type ChatLocale,
+} from "@/lib/chat-guide";
+import {
+  defaultChatMessages,
+  loadChatHistory,
+  saveChatHistory,
+} from "@/lib/chat-history";
+import { saveNicheFeedback } from "@/lib/niche-feedback";
 import type { ProductType, RequirementTagId } from "@/lib/types";
 
 export interface ChatQuoteResult {
@@ -23,25 +45,21 @@ interface ChatServiceProps {
   onComplete: (result: ChatQuoteResult) => void;
 }
 
-type Phase = "service" | "platform" | "outcomes" | "done";
+type Phase =
+  | "service"
+  | "analyzing"
+  | "confirm_niche"
+  | "platform"
+  | "outcomes"
+  | "done";
 
 interface ChatMessage {
   id: string;
   role: "bot" | "user";
   text: string;
+  /** Show niche + example chips under this bot reply */
+  picker?: "services";
 }
-
-const SUGGESTIONS = [
-  "Coffee shop",
-  "Ice cream shop",
-  "Salon",
-  "Clinic",
-  "Restaurant",
-  "Gym",
-  "Fashion store",
-  "Tuition centre",
-  "Real estate",
-];
 
 function SelectionPanel({
   title,
@@ -53,6 +71,7 @@ function SelectionPanel({
   onClear,
   onConfirm,
   confirmDisabled,
+  confirmLabel = "Confirm",
 }: {
   title?: string;
   options: { id: string; label: string; hint?: string }[];
@@ -63,6 +82,7 @@ function SelectionPanel({
   onClear: () => void;
   onConfirm: () => void;
   confirmDisabled: boolean;
+  confirmLabel?: string;
 }) {
   return (
     <div className="mt-2 w-full max-w-md overflow-hidden rounded-2xl border border-charcoal/10 bg-white shadow-sm">
@@ -140,7 +160,7 @@ function SelectionPanel({
           onClick={onConfirm}
           className="w-full rounded-xl bg-forest px-4 py-3 text-sm font-semibold text-white transition enabled:hover:bg-forest-deep disabled:cursor-not-allowed disabled:bg-charcoal/25"
         >
-          Confirm ({selected.length})
+          {confirmLabel} ({selected.length})
         </button>
       </div>
     </div>
@@ -151,24 +171,32 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
   const [input, setInput] = useState("");
   const [phase, setPhase] = useState<Phase>("service");
   const [service, setService] = useState("");
+  const [analysis, setAnalysis] = useState<ServiceAnalysis | null>(null);
   const [platformSelected, setPlatformSelected] = useState<ProductType[]>([]);
   const [outcomeSelected, setOutcomeSelected] = useState<string[]>([]);
   const [outcomeOptions, setOutcomeOptions] = useState<OutcomeOption[]>([]);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      role: "bot",
-      text: "Hi — I’m Nemora Quote. What business should we quote for? (e.g. Coffee shop)",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>(defaultChatMessages);
   const [error, setError] = useState("");
+  const [replyLocale, setReplyLocale] = useState<ChatLocale>("en");
+  const [hydrated, setHydrated] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const bootstrapped = useRef(false);
 
   useEffect(() => {
+    const saved = loadChatHistory();
+    if (saved?.messages?.length) {
+      setMessages(saved.messages);
+      setReplyLocale(saved.replyLocale);
+    }
+    setHydrated(true);
     inputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    saveChatHistory(messages, replyLocale);
+  }, [messages, replyLocale, hydrated]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -177,7 +205,7 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
   useEffect(() => {
     if (!initialService.trim() || bootstrapped.current) return;
     bootstrapped.current = true;
-    beginWithService(initialService.trim(), false);
+    void beginWithService(initialService.trim(), false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialService]);
 
@@ -185,29 +213,188 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
     setMessages((current) => [...current, ...next]);
   }
 
-  function beginWithService(value: string, addUserBubble: boolean) {
+  async function beginWithService(
+    value: string,
+    addUserBubble: boolean,
+    options?: {
+      displayAs?: string;
+      correctionNote?: string | null;
+      locale?: ChatLocale;
+    },
+  ) {
     const trimmed = value.trim();
     if (!trimmed) {
       setError("Type a service, e.g. Coffee shop.");
       return;
     }
+    const locale = options?.locale ?? replyLocale;
+    setReplyLocale(locale);
     setError("");
     setService(trimmed);
     setInput("");
     setPlatformSelected([]);
     setOutcomeSelected([]);
+    setAnalysis(null);
+    setOutcomeOptions([]);
 
     const nextMessages: ChatMessage[] = [];
     if (addUserBubble) {
-      nextMessages.push({ id: `u-${Date.now()}`, role: "user", text: trimmed });
+      nextMessages.push({
+        id: `u-${Date.now()}`,
+        role: "user",
+        text: options?.displayAs?.trim() || trimmed,
+      });
+    }
+    if (options?.correctionNote) {
+      nextMessages.push({
+        id: `b-fix-${Date.now()}`,
+        role: "bot",
+        text: options.correctionNote,
+      });
     }
     nextMessages.push({
-      id: `b-platform-${Date.now()}`,
+      id: `b-analyze-${Date.now()}`,
       role: "bot",
-      text: `I understand you’re looking for a digital presence for “${trimmed}”. Choose what we should build:`,
+      text: analyzingMessage(trimmed, locale),
     });
     pushMessages(...nextMessages);
+    setPhase("analyzing");
+
+    let result: ServiceAnalysis;
+    try {
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ service: trimmed }),
+      });
+      if (!response.ok) throw new Error("Analyze failed");
+      result = (await response.json()) as ServiceAnalysis;
+    } catch {
+      result = {
+        nicheId: null,
+        nicheLabel: "General business",
+        confidence: "low",
+        summary: `Couldn’t reach AI just now. Showing common needs for “${trimmed}” from our local catalog.`,
+        suggestedPlatform: "web",
+        commonOutcomeIds: [],
+        source: "local",
+      };
+    }
+
+    setAnalysis(result);
+    if (result.suggestedPlatform) {
+      setPlatformSelected([result.suggestedPlatform]);
+    }
+
+    pushMessages(
+      {
+        id: `b-summary-${Date.now()}`,
+        role: "bot",
+        text: explainAfterAnalysis(trimmed, result, locale),
+      },
+      {
+        id: `b-niche-q-${Date.now()}`,
+        role: "bot",
+        text: nicheConfirmPrompt(result.nicheLabel, locale),
+      },
+    );
+    setPhase("confirm_niche");
+  }
+
+  function confirmNicheCorrect() {
+    if (!analysis) return;
+    saveNicheFeedback({
+      service,
+      predictedNicheId: analysis.nicheId,
+      correctedNicheId: analysis.nicheId,
+      confirmed: true,
+      source: analysis.source,
+    });
+    pushMessages(
+      {
+        id: `u-niche-ok-${Date.now()}`,
+        role: "user",
+        text: replyLocale === "tanglish" ? "Aama — niche correct" : "Yes, niche is right",
+      },
+      {
+        id: `b-plat-${Date.now()}`,
+        role: "bot",
+        text:
+          replyLocale === "tanglish"
+            ? "Super. Inga enna build pannanum choose pannunga:"
+            : "Great. Choose what we should build:",
+      },
+    );
     setPhase("platform");
+  }
+
+  function correctNiche(nicheId: string) {
+    if (!analysis) return;
+    const label = nicheLabel(nicheId);
+    saveNicheFeedback({
+      service,
+      predictedNicheId: analysis.nicheId,
+      correctedNicheId: nicheId,
+      confirmed: false,
+      source: analysis.source,
+    });
+
+    const platform = analysis.suggestedPlatform ?? "web";
+    const next: ServiceAnalysis = {
+      ...analysis,
+      nicheId,
+      nicheLabel: label,
+      confidence: "high",
+      summary: `Updated niche to ${label} for “${service}”.`,
+      commonOutcomeIds: commonOutcomeIds(nicheId, platform === "both" ? null : platform),
+      source: analysis.source,
+    };
+    setAnalysis(next);
+
+    pushMessages(
+      {
+        id: `u-niche-fix-${Date.now()}`,
+        role: "user",
+        text:
+          replyLocale === "tanglish"
+            ? `Niche change → ${label}`
+            : `Change niche → ${label}`,
+      },
+      {
+        id: `b-plat-${Date.now()}`,
+        role: "bot",
+        text:
+          replyLocale === "tanglish"
+            ? `Save aachu. Ippo ${label} use panrom. Enna build pannanum choose pannunga:`
+            : `Saved. Using ${label} now. Choose what we should build:`,
+      },
+    );
+    setPhase("platform");
+  }
+
+  /** Reset quote steps only — never delete chat history. */
+  function resetToService(options?: { locale?: ChatLocale; announce?: boolean }) {
+    const locale = options?.locale ?? replyLocale;
+    const announce = options?.announce !== false;
+    setPhase("service");
+    setService("");
+    setAnalysis(null);
+    setPlatformSelected([]);
+    setOutcomeSelected([]);
+    setOutcomeOptions([]);
+    setError("");
+    setReplyLocale(locale);
+    if (announce) {
+      pushMessages({
+        id: `continue-${Date.now()}`,
+        role: "bot",
+        text:
+          locale === "tanglish"
+            ? "Seri — puthu business ku continue panrom. Chat history delete aagala. Client business type sollunga."
+            : "Sure — let’s quote another business. Your chat history stays. What should we quote for next?",
+      });
+    }
+    window.setTimeout(() => inputRef.current?.focus(), 50);
   }
 
   function togglePlatform(id: string) {
@@ -217,19 +404,30 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
 
   function confirmPlatform() {
     const productType = platformSelected[0];
-    if (!productType) return;
+    if (!productType || !analysis) return;
 
-    const options = listOutcomes(service, productType);
+    const options = listOutcomesForNiche(analysis.nicheId, productType);
     setOutcomeOptions(options);
-    // Pre-select a sensible starter set; user can Select all / Clear
-    setOutcomeSelected(options.slice(0, Math.min(4, options.length)).map((o) => o.id));
+
+    const commonForPlatform = analysis.commonOutcomeIds.filter((id) =>
+      options.some((o) => o.id === id),
+    );
+    const fallbackCommon = options.filter((o) => o.common).map((o) => o.id);
+    const preselected =
+      commonForPlatform.length > 0
+        ? commonForPlatform
+        : fallbackCommon.length > 0
+          ? fallbackCommon
+          : options.slice(0, Math.min(4, options.length)).map((o) => o.id);
+
+    setOutcomeSelected(preselected);
 
     pushMessages(
       { id: `u-plat-${Date.now()}`, role: "user", text: platformLabel(productType) },
       {
         id: `b-out-${Date.now()}`,
         role: "bot",
-        text: `Great — ${platformLabel(productType)} for “${service}”. Select the outcomes the client needs:`,
+        text: `Common requirements for ${platformLabel(productType)} · ${analysis.nicheLabel} are pre-selected. Add or remove, then confirm:`,
       },
     );
     setPhase("outcomes");
@@ -258,7 +456,7 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
       {
         id: `b-done-${Date.now()}`,
         role: "bot",
-        text: "Perfect. I’ll open packages optimized for these outcomes.",
+        text: "Perfect. Opening packages optimized for these requirements.",
       },
     );
     setPhase("done");
@@ -274,10 +472,62 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
     }, 500);
   }
 
+  function handleUserMessage(raw: string, options?: { skipUserBubble?: boolean }) {
+    const classified = classifyUserInput(raw);
+    const { intent, serviceText, original, correctionNote, locale } = classified;
+    const trimmed = original || raw.trim();
+    if (!trimmed) {
+      setError("Type a message or pick a suggestion below.");
+      return;
+    }
+    setError("");
+    setInput("");
+    setReplyLocale(locale);
+
+    if (intent === "start_over") {
+      pushMessages(
+        { id: `u-${Date.now()}`, role: "user", text: trimmed },
+        ...(correctionNote
+          ? [{ id: `b-fix-${Date.now()}`, role: "bot" as const, text: correctionNote }]
+          : []),
+        {
+          id: `b-guide-${Date.now()}`,
+          role: "bot",
+          text: replyForIntent("start_over", locale),
+        },
+      );
+      resetToService({ locale, announce: false });
+      return;
+    }
+
+    if (isGuideIntent(intent)) {
+      const userBubble: ChatMessage[] = options?.skipUserBubble
+        ? []
+        : [{ id: `u-${Date.now()}`, role: "user", text: trimmed }];
+      const noteBubble: ChatMessage[] = correctionNote
+        ? [{ id: `b-fix-${Date.now()}`, role: "bot", text: correctionNote }]
+        : [];
+      const showPicker = intent === "list_services" || intent === "quote_capability";
+      pushMessages(...userBubble, ...noteBubble, {
+        id: `b-guide-${Date.now()}`,
+        role: "bot",
+        text: replyForIntent(intent, locale),
+        picker: showPicker ? "services" : undefined,
+      });
+      return;
+    }
+
+    void beginWithService(serviceText, true, {
+      displayAs: trimmed,
+      correctionNote,
+      locale,
+    });
+  }
+
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (phase !== "service") return;
-    beginWithService(input, true);
+    handleUserMessage(input);
   }
 
   const inputDisabled = phase !== "service";
@@ -290,7 +540,7 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
         </p>
         <h1 className="font-serif text-3xl text-forest sm:text-4xl">What are we building?</h1>
         <p className="mt-2 text-sm text-charcoal/60">
-          Chat the business → choose Website or App → pick outcomes → get an optimized quote.
+          Chatbot analyzes the business → suggests common needs → package → optimized PDF.
         </p>
       </div>
 
@@ -305,7 +555,7 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
             >
               <div
                 className={[
-                  "max-w-[90%] rounded-2xl px-4 py-3 text-sm leading-relaxed sm:text-[15px]",
+                  "max-w-[90%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed sm:text-[15px]",
                   message.role === "user"
                     ? "rounded-br-md bg-forest text-white"
                     : "rounded-bl-md border-l-4 border-forest bg-white text-charcoal shadow-sm ring-1 ring-charcoal/8",
@@ -317,12 +567,114 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
                   </p>
                 )}
                 {message.text}
+                {message.role === "bot" && message.picker === "services" && (
+                  <div className="mt-3 space-y-3 border-t border-charcoal/8 pt-3">
+                    <div>
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-forest/65">
+                        Business types
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {allNicheOptions().map((n) => (
+                          <button
+                            key={n.id}
+                            type="button"
+                            disabled={phase !== "service"}
+                            onClick={() =>
+                              void beginWithService(
+                                NICHE_PICK_EXAMPLES[n.id] ?? n.label,
+                                true,
+                                { locale: replyLocale },
+                              )
+                            }
+                            className="rounded-full border border-forest/25 bg-forest/5 px-3 py-1.5 text-xs font-semibold text-forest transition hover:border-forest/40 hover:bg-forest/10 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            {n.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-charcoal/45">
+                        Quick examples
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {SERVICE_SUGGESTIONS.map((hint) => (
+                          <button
+                            key={hint}
+                            type="button"
+                            disabled={phase !== "service"}
+                            onClick={() =>
+                              void beginWithService(hint, true, { locale: replyLocale })
+                            }
+                            className="rounded-full border border-charcoal/10 bg-sage-soft/50 px-3 py-1.5 text-xs font-medium text-charcoal/70 transition hover:border-forest/30 hover:text-forest disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            {hint}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
 
-          {phase === "platform" && (
+          {phase === "analyzing" && (
             <div className="flex justify-start">
+              <div className="rounded-2xl rounded-bl-md border-l-4 border-forest bg-sage-soft/60 px-4 py-3 text-sm text-charcoal/70 ring-1 ring-charcoal/8">
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-forest" />
+                  Running AI analysis…
+                </span>
+              </div>
+            </div>
+          )}
+
+          {phase === "confirm_niche" && analysis && (
+            <div className="flex w-full max-w-md flex-col items-start gap-3">
+              <button
+                type="button"
+                onClick={confirmNicheCorrect}
+                className="w-full rounded-xl bg-forest px-4 py-3 text-sm font-semibold text-white transition hover:bg-forest-deep"
+              >
+                {replyLocale === "tanglish"
+                  ? `Aama — ${analysis.nicheLabel} correct`
+                  : `Yes — ${analysis.nicheLabel} is right`}
+              </button>
+              <p className="text-xs font-medium text-charcoal/55">
+                {replyLocale === "tanglish"
+                  ? "Illa correct niche choose pannunga:"
+                  : "Or pick the correct niche:"}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {allNicheOptions().map((n) => (
+                  <button
+                    key={n.id}
+                    type="button"
+                    onClick={() => correctNiche(n.id)}
+                    className={[
+                      "rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                      analysis.nicheId === n.id
+                        ? "border-forest bg-forest/10 text-forest"
+                        : "border-charcoal/10 bg-white text-charcoal/70 hover:border-forest/30 hover:text-forest",
+                    ].join(" ")}
+                  >
+                    {n.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={resetToService}
+                className="text-xs font-semibold text-forest hover:underline"
+              >
+                Change service
+              </button>
+            </div>
+          )}
+
+          {phase === "platform" && (
+            <div className="flex flex-col items-start gap-2">
               <SelectionPanel
                 options={PLATFORM_OPTIONS.map((p) => ({
                   id: p.id,
@@ -336,14 +688,25 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
                 onConfirm={confirmPlatform}
                 confirmDisabled={platformSelected.length === 0}
               />
+              <button
+                type="button"
+                onClick={resetToService}
+                className="text-xs font-semibold text-forest hover:underline"
+              >
+                Change service
+              </button>
             </div>
           )}
 
           {phase === "outcomes" && (
-            <div className="flex justify-start">
+            <div className="flex flex-col items-start gap-2">
               <SelectionPanel
-                title="Select all that apply for this client"
-                options={outcomeOptions.map((o) => ({ id: o.id, label: o.label }))}
+                title="Common needs are pre-selected — adjust for this client"
+                options={outcomeOptions.map((o) => ({
+                  id: o.id,
+                  label: o.label,
+                  hint: o.common ? "Common for this niche" : undefined,
+                }))}
                 selected={outcomeSelected}
                 multi
                 onToggle={toggleOutcome}
@@ -351,7 +714,15 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
                 onClear={() => setOutcomeSelected([])}
                 onConfirm={confirmOutcomes}
                 confirmDisabled={outcomeSelected.length === 0}
+                confirmLabel="Continue to packages"
               />
+              <button
+                type="button"
+                onClick={resetToService}
+                className="text-xs font-semibold text-forest hover:underline"
+              >
+                Change service
+              </button>
             </div>
           )}
 
@@ -360,17 +731,33 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
 
         <div className="border-t border-charcoal/8 bg-white px-4 py-4 sm:px-5">
           {phase === "service" && (
-            <div className="mb-3 flex flex-wrap gap-2">
-              {SUGGESTIONS.map((hint) => (
-                <button
-                  key={hint}
-                  type="button"
-                  onClick={() => beginWithService(hint, true)}
-                  className="rounded-full border border-charcoal/10 bg-sage-soft/50 px-3 py-1.5 text-xs font-medium text-charcoal/70 transition hover:border-forest/30 hover:text-forest"
-                >
-                  {hint}
-                </button>
-              ))}
+            <div className="mb-3 space-y-2">
+              <div className="flex flex-wrap gap-2">
+                {CHAT_QUICK_ACTIONS.map((action) => (
+                  <button
+                    key={action.label}
+                    type="button"
+                    onClick={() =>
+                      handleUserMessage(action.message, { skipUserBubble: false })
+                    }
+                    className="rounded-full border border-forest/25 bg-forest/5 px-3 py-1.5 text-xs font-semibold text-forest transition hover:border-forest/40"
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {SERVICE_SUGGESTIONS.map((hint) => (
+                  <button
+                    key={hint}
+                    type="button"
+                    onClick={() => void beginWithService(hint, true)}
+                    className="rounded-full border border-charcoal/10 bg-sage-soft/50 px-3 py-1.5 text-xs font-medium text-charcoal/70 transition hover:border-forest/30 hover:text-forest"
+                  >
+                    {hint}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
           <form onSubmit={handleSubmit} className="flex gap-2">

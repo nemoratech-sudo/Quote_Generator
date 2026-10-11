@@ -1,0 +1,117 @@
+{
+  "classifyExamples": [
+    {
+      "input": "Adyar coffee shop with filter coffee",
+      "nicheId": "cafe",
+      "confidence": "high",
+      "suggestedPlatform": "web",
+      "summary": "Neighborhood cafe — menu, maps, and WhatsApp orders are typical."
+    },
+    {
+      "input": "ladies beauty parlour near bus stand",
+      "nicheId": "salon",
+      "confidence": "high",
+      "suggestedPlatform": "web",
+      "summary": "Beauty salon — services, gallery, booking, and WhatsApp fit well."
+    },
+    {
+      "input": "dental clinic in T Nagar",
+      "nicheId": "clinic",
+      "confidence": "high",
+      "suggestedPlatform": "web",
+      "summary": "Dental clinic — services, appointments, maps, and contact are common."
+    },
+    {
+      "input": "fashion boutique for sarees",
+      "nicheId": "shop",
+      "confidence": "high",
+      "suggestedPlatform": "web",
+      "summary": "Retail fashion shop — catalog, WhatsApp enquire, and maps."
+    },
+    {
+      "input": "crossfit gym with monthly plans",
+      "nicheId": "gym",
+      "confidence": "high",
+      "suggestedPlatform": "both",
+      "summary": "Fitness gym — plans, schedule, join form; app helps renewals."
+    },
+    {
+      "input": "NEET coaching centre",
+      "nicheId": "education",
+      "confidence": "high",
+      "suggestedPlatform": "web",
+      "summary": "Education coaching — courses, fees, enquiry, and maps."
+    },
+    {
+      "input": "builder selling 2BHK apartments",
+      "nicheId": "realestate",
+      "confidence": "high",
+      "suggestedPlatform": "web",
+      "summary": "Real estate projects — listings, site-visit form, maps."
+    },
+    {
+      "input": "birthday cake bakery custom orders",
+      "nicheId": "bakery",
+      "confidence": "high",
+      "suggestedPlatform": "web",
+      "summary": "Bakery — cake menu, custom order form, WhatsApp."
+    },
+    {
+      "input": "morning yoga classes for ladies",
+      "nicheId": "yoga",
+      "confidence": "high",
+      "suggestedPlatform": "web",
+      "summary": "Yoga studio — class schedule, trial form, maps."
+    },
+    {
+      "input": "packers and movers Chennai to Bangalore",
+      "nicheId": "logistics",
+      "confidence": "high",
+      "suggestedPlatform": "web",
+      "summary": "Logistics movers — services, quote form, WhatsApp booking."
+    },
+    {
+      "input": "temple trust website for donations",
+      "nicheId": "temple",
+      "confidence": "high",
+      "suggestedPlatform": "web",
+      "summary": "Temple trust — events, donation form, location."
+    },
+    {
+      "input": "mens paying guest near college",
+      "nicheId": "pg",
+      "confidence": "high",
+      "suggestedPlatform": "web",
+      "summary": "PG hostel — room types, vacancy enquire, maps."
+    },
+    {
+      "input": "urban aquaponics consulting",
+      "nicheId": null,
+      "confidence": "low",
+      "suggestedPlatform": "web",
+      "summary": "Specialist consulting — treat as general business needs."
+    },
+    {
+      "input": "do you do ecommerce for my shop",
+      "note": "This is a help/meta question — chat should NOT classify as niche; local guide handles it."
+    },
+    {
+      "input": "list all services",
+      "note": "Meta — list niches; do not analyze as a business."
+    }
+  ],
+  "badExamples": [
+    {
+      "wrong": "Treating “help” or “list all services” as a client business",
+      "right": "Use local guide intents; never invent prices"
+    },
+    {
+      "wrong": "Yoga studio → gym only because fitness is close",
+      "right": "Prefer yoga niche when yoga/meditation/studio is clear"
+    },
+    {
+      "wrong": "Bakery → cafe always",
+      "right": "Prefer bakery when cakes/pastry/bread are the offer"
+    }
+  ]
+}
