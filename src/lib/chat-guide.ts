@@ -216,10 +216,10 @@ export function replyForIntent(intent: ChatIntent, locale: ChatLocale = "en"): s
 
 function replyGreetingEn(): string {
   return [
-    "Hi — I’m Nemora’s quote assistant.",
+    "Hi — ready when you are.",
     "",
     "Tell me the client’s business (e.g. Coffee shop, Dental clinic, Gym).",
-    "Or tap Help / List all services below — those are guides, not a business name.",
+    "Or tap List all services / Help — those are guides, not a business name.",
     "",
     "Flow: business → common needs → Website or App → packages → PDF. Prices come from our catalog, not AI.",
   ].join("\n");
@@ -227,10 +227,10 @@ function replyGreetingEn(): string {
 
 function replyGreetingTl(): string {
   return [
-    "Vanakkam — naan Nemora quote assistant.",
+    "Vanakkam — ready ah irukken.",
     "",
     "Client business type sollunga (e.g. Coffee shop, Dental clinic, Gym).",
-    "Help / List all services chips — adhu guide thaan, business name illa.",
+    "List all services / Help — adhu guide thaan, business name illa.",
     "",
     "Flow: business → common needs → Website illa App → packages → PDF. Price catalog la irukku — AI invent pannathu.",
   ].join("\n");

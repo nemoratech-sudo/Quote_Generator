@@ -1,6 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import {
   allNicheOptions,
   commonOutcomeIds,
@@ -14,7 +16,6 @@ import {
 } from "@/lib/outcomes";
 import {
   analyzingMessage,
-  CHAT_QUICK_ACTIONS,
   classifyUserInput,
   explainAfterAnalysis,
   isGuideIntent,
@@ -31,6 +32,22 @@ import {
 } from "@/lib/chat-history";
 import { saveNicheFeedback } from "@/lib/niche-feedback";
 import type { ProductType, RequirementTagId } from "@/lib/types";
+
+const EXPLORE_CHIPS = [
+  { label: "Help", message: "help" },
+  { label: "List services", message: "list all services" },
+  { label: "E-commerce?", message: "do you do ecommerce" },
+] as const;
+
+/** Deterministic 12h clock — avoids SSR/client locale casing mismatches (PM vs pm). */
+function formatChatTime(at: number): string {
+  const d = new Date(at);
+  const hours = d.getHours();
+  const minutes = d.getMinutes();
+  const hour12 = hours % 12 || 12;
+  const period = hours < 12 ? "AM" : "PM";
+  return `${hour12}:${minutes.toString().padStart(2, "0")} ${period}`;
+}
 
 export interface ChatQuoteResult {
   service: string;
@@ -59,6 +76,7 @@ interface ChatMessage {
   text: string;
   /** Show niche + example chips under this bot reply */
   picker?: "services";
+  at?: number;
 }
 
 function SelectionPanel({
@@ -85,14 +103,14 @@ function SelectionPanel({
   confirmLabel?: string;
 }) {
   return (
-    <div className="mt-2 w-full max-w-md overflow-hidden rounded-2xl border border-charcoal/10 bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-charcoal/8 px-3 py-2 text-xs">
+    <div className="mt-2 w-full max-w-md overflow-hidden rounded-2xl border border-ocean/15 bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b border-ocean/10 px-3 py-2 text-xs">
         <div className="flex gap-3">
           {multi && onSelectAll && (
             <button
               type="button"
               onClick={onSelectAll}
-              className="font-semibold text-forest hover:underline"
+              className="font-semibold text-ocean hover:underline"
             >
               Select all
             </button>
@@ -111,12 +129,12 @@ function SelectionPanel({
       </div>
 
       {title && (
-        <p className="border-b border-charcoal/6 px-3 py-2 text-xs font-medium text-charcoal/55">
+        <p className="border-b border-ocean/8 px-3 py-2 text-xs font-medium text-charcoal/55">
           {title}
         </p>
       )}
 
-      <div className="grid max-h-64 gap-2 overflow-y-auto p-3 sm:max-h-80 sm:grid-cols-2">
+      <div className="grid max-h-52 gap-2 overflow-y-auto p-3 sm:max-h-72 sm:grid-cols-2">
         {options.map((option) => {
           const active = selected.includes(option.id);
           return (
@@ -127,8 +145,8 @@ function SelectionPanel({
               className={[
                 "flex items-start gap-2.5 rounded-xl border px-3 py-3 text-left transition",
                 active
-                  ? "border-forest bg-sage-soft/80 ring-1 ring-forest/30"
-                  : "border-charcoal/10 bg-white hover:border-forest/25",
+                  ? "border-nemo bg-nemo/10 ring-1 ring-nemo/25"
+                  : "border-ocean/10 bg-white hover:border-ocean/30",
               ].join(" ")}
             >
               <span
@@ -136,7 +154,7 @@ function SelectionPanel({
                   "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] font-bold",
                   multi ? "rounded" : "rounded-full",
                   active
-                    ? "border-forest bg-forest text-white"
+                    ? "border-nemo bg-nemo text-white"
                     : "border-charcoal/25 text-transparent",
                 ].join(" ")}
               >
@@ -158,7 +176,7 @@ function SelectionPanel({
           type="button"
           disabled={confirmDisabled}
           onClick={onConfirm}
-          className="w-full rounded-xl bg-forest px-4 py-3 text-sm font-semibold text-white transition enabled:hover:bg-forest-deep disabled:cursor-not-allowed disabled:bg-charcoal/25"
+          className="w-full rounded-xl bg-nemo px-4 py-3 text-sm font-semibold text-white transition enabled:hover:bg-nemo-deep disabled:cursor-not-allowed disabled:bg-charcoal/25"
         >
           {confirmLabel} ({selected.length})
         </button>
@@ -182,12 +200,25 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const bootstrapped = useRef(false);
+  /** -1 = live draft; 0..n-1 indexes into sent user messages (oldest → newest) */
+  const historyIndexRef = useRef(-1);
+  const draftBeforeHistoryRef = useRef("");
 
   useEffect(() => {
+    const stamp = Date.now();
     const saved = loadChatHistory();
     if (saved?.messages?.length) {
-      setMessages(saved.messages);
+      setMessages(
+        saved.messages.map((m) => ({
+          ...m,
+          at: typeof m.at === "number" ? m.at : stamp,
+        })),
+      );
       setReplyLocale(saved.replyLocale);
+    } else {
+      setMessages((current) =>
+        current.map((m) => ({ ...m, at: m.at ?? stamp })),
+      );
     }
     setHydrated(true);
     inputRef.current?.focus();
@@ -210,7 +241,8 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
   }, [initialService]);
 
   function pushMessages(...next: ChatMessage[]) {
-    setMessages((current) => [...current, ...next]);
+    const stamped = next.map((m) => ({ ...m, at: m.at ?? Date.now() }));
+    setMessages((current) => [...current, ...stamped]);
   }
 
   async function beginWithService(
@@ -527,264 +559,349 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (phase !== "service") return;
+    historyIndexRef.current = -1;
+    draftBeforeHistoryRef.current = "";
     handleUserMessage(input);
+  }
+
+  function sentInputHistory(): string[] {
+    return messages.filter((m) => m.role === "user").map((m) => m.text);
+  }
+
+  function handleInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (inputDisabled) return;
+    if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+
+    const history = sentInputHistory();
+    if (history.length === 0) return;
+
+    // Terminal-style: browse prior sends; don't move the text caret
+    event.preventDefault();
+
+    if (event.key === "ArrowUp") {
+      if (historyIndexRef.current === -1) {
+        draftBeforeHistoryRef.current = input;
+        historyIndexRef.current = history.length - 1;
+      } else if (historyIndexRef.current > 0) {
+        historyIndexRef.current -= 1;
+      } else {
+        return;
+      }
+      setInput(history[historyIndexRef.current] ?? "");
+      return;
+    }
+
+    // ArrowDown
+    if (historyIndexRef.current === -1) return;
+    if (historyIndexRef.current < history.length - 1) {
+      historyIndexRef.current += 1;
+      setInput(history[historyIndexRef.current] ?? "");
+      return;
+    }
+    historyIndexRef.current = -1;
+    setInput(draftBeforeHistoryRef.current);
   }
 
   const inputDisabled = phase !== "service";
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col">
-      <div className="mb-6 text-center sm:mb-8">
-        <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-forest/70">
-          Nemora Quote
-        </p>
-        <h1 className="font-serif text-3xl text-forest sm:text-4xl">What are we building?</h1>
-        <p className="mt-2 text-sm text-charcoal/60">
-          Chatbot analyzes the business → suggests common needs → package → optimized PDF.
-        </p>
-      </div>
+    <div className="flex min-h-0 w-full flex-1 flex-col">
+      {/* Full-width top bar */}
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-ocean/10 bg-white px-4 py-3 sm:px-6">
+        <Link href="/" className="inline-flex min-w-0 items-center gap-2.5">
+          <Image
+            src="/brand/nemora-logo.jpg"
+            alt="Nemora"
+            width={40}
+            height={40}
+            className="h-9 w-9 shrink-0 rounded-full object-cover sm:h-10 sm:w-10"
+            priority
+          />
+          <span className="min-w-0">
+            <span className="block font-serif text-2xl leading-none tracking-tight text-ocean sm:text-[1.75rem]">
+              Nemora
+            </span>
+            <span className="mt-0.5 hidden text-[10px] font-semibold uppercase tracking-[0.18em] text-charcoal/40 sm:block">
+              Quotes
+            </span>
+          </span>
+        </Link>
+        <nav className="flex items-center gap-1 sm:gap-2">
+          <button
+            type="button"
+            onClick={() => handleUserMessage("help")}
+            className="rounded-full px-2.5 py-2 text-sm font-medium text-charcoal/65 transition hover:bg-sky-mist hover:text-ocean sm:px-3"
+          >
+            Help
+          </button>
+          <Link
+            href="/admin"
+            className="rounded-full px-2.5 py-2 text-sm font-medium text-charcoal/65 transition hover:bg-sky-mist hover:text-ocean sm:px-3"
+          >
+            Admin
+          </Link>
+          <Link
+            href="/quotes"
+            className="rounded-full px-2.5 py-2 text-sm font-medium text-charcoal/65 transition hover:bg-sky-mist hover:text-ocean sm:px-3"
+          >
+            Saved
+          </Link>
+          <Link
+            href="/quote/new"
+            className="rounded-full bg-ocean px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-ocean-deep sm:px-4"
+          >
+            New quote
+          </Link>
+        </nav>
+      </header>
 
-      <div className="flex min-h-[480px] flex-col overflow-hidden rounded-[1.75rem] border border-white/70 bg-white/95 shadow-[0_24px_60px_-28px_rgba(27,67,50,0.35)] backdrop-blur">
-        <div className="flex-1 space-y-3 overflow-y-auto px-4 py-5 sm:px-6">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={["flex", message.role === "user" ? "justify-end" : "justify-start"].join(
-                " ",
-              )}
-            >
+      {/* Full-screen chat: messages scroll; composer stays pinned */}
+      <section className="nemo-chat-pane min-h-0 flex-1">
+          <div className="nemo-chat-scroll w-full space-y-4 px-3 py-4 sm:px-5 sm:py-5 lg:px-8">
+            {messages.map((message) => (
               <div
+                key={message.id}
                 className={[
-                  "max-w-[90%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed sm:text-[15px]",
-                  message.role === "user"
-                    ? "rounded-br-md bg-forest text-white"
-                    : "rounded-bl-md border-l-4 border-forest bg-white text-charcoal shadow-sm ring-1 ring-charcoal/8",
+                  "flex flex-col",
+                  message.role === "user" ? "items-end" : "items-start",
                 ].join(" ")}
               >
-                {message.role === "bot" && (
-                  <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-forest/55">
-                    Nemora
+                <div
+                  className={[
+                    "max-w-[min(100%,48rem)] whitespace-pre-wrap px-4 py-3 text-sm leading-relaxed sm:text-[15px]",
+                    message.role === "user"
+                      ? "rounded-[1.25rem] rounded-br-md bg-nemo text-white shadow-md shadow-nemo/25"
+                      : "w-full rounded-[1.25rem] rounded-bl-md border border-sky-mist bg-white text-charcoal shadow-sm sm:w-auto sm:max-w-[min(100%,48rem)]",
+                  ].join(" ")}
+                >
+                  {message.text}
+                  {message.role === "bot" && message.picker === "services" && (
+                    <div className="mt-3 space-y-3 border-t border-sky-mist pt-3">
+                      <div>
+                        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-nemo">
+                          Business types
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {allNicheOptions().map((n) => (
+                            <button
+                              key={n.id}
+                              type="button"
+                              disabled={phase !== "service"}
+                              onClick={() =>
+                                void beginWithService(
+                                  NICHE_PICK_EXAMPLES[n.id] ?? n.label,
+                                  true,
+                                  { locale: replyLocale },
+                                )
+                              }
+                              className="rounded-full border border-nemo/45 bg-white px-3 py-1.5 text-xs font-semibold text-nemo transition hover:bg-nemo/10 disabled:opacity-40"
+                            >
+                              {n.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-ocean/55">
+                          Quick examples
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {SERVICE_SUGGESTIONS.map((hint) => (
+                            <button
+                              key={hint}
+                              type="button"
+                              disabled={phase !== "service"}
+                              onClick={() =>
+                                void beginWithService(hint, true, { locale: replyLocale })
+                              }
+                              className="rounded-full border border-ocean/15 bg-sky-mist/80 px-3 py-1.5 text-xs font-medium text-ocean transition hover:border-ocean/35 disabled:opacity-40"
+                            >
+                              {hint}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {hydrated && message.at != null && (
+                  <p className="mt-1 px-1 text-[11px] text-charcoal/40">
+                    {formatChatTime(message.at)}
                   </p>
                 )}
-                {message.text}
-                {message.role === "bot" && message.picker === "services" && (
-                  <div className="mt-3 space-y-3 border-t border-charcoal/8 pt-3">
-                    <div>
-                      <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-forest/65">
-                        Business types
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {allNicheOptions().map((n) => (
-                          <button
-                            key={n.id}
-                            type="button"
-                            disabled={phase !== "service"}
-                            onClick={() =>
-                              void beginWithService(
-                                NICHE_PICK_EXAMPLES[n.id] ?? n.label,
-                                true,
-                                { locale: replyLocale },
-                              )
-                            }
-                            className="rounded-full border border-forest/25 bg-forest/5 px-3 py-1.5 text-xs font-semibold text-forest transition hover:border-forest/40 hover:bg-forest/10 disabled:cursor-not-allowed disabled:opacity-40"
-                          >
-                            {n.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-charcoal/45">
-                        Quick examples
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {SERVICE_SUGGESTIONS.map((hint) => (
-                          <button
-                            key={hint}
-                            type="button"
-                            disabled={phase !== "service"}
-                            onClick={() =>
-                              void beginWithService(hint, true, { locale: replyLocale })
-                            }
-                            className="rounded-full border border-charcoal/10 bg-sage-soft/50 px-3 py-1.5 text-xs font-medium text-charcoal/70 transition hover:border-forest/30 hover:text-forest disabled:cursor-not-allowed disabled:opacity-40"
-                          >
-                            {hint}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
-            </div>
-          ))}
+            ))}
 
-          {phase === "analyzing" && (
-            <div className="flex justify-start">
-              <div className="rounded-2xl rounded-bl-md border-l-4 border-forest bg-sage-soft/60 px-4 py-3 text-sm text-charcoal/70 ring-1 ring-charcoal/8">
-                <span className="inline-flex items-center gap-2">
-                  <span className="h-2 w-2 animate-pulse rounded-full bg-forest" />
-                  Running AI analysis…
-                </span>
+            {phase === "analyzing" && (
+              <div className="flex justify-start" role="status" aria-label="Analyzing">
+                <div className="nemo-swim-stage">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/chat/nemo-swim.svg" alt="" width={36} height={22} />
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {phase === "confirm_niche" && analysis && (
-            <div className="flex w-full max-w-md flex-col items-start gap-3">
-              <button
-                type="button"
-                onClick={confirmNicheCorrect}
-                className="w-full rounded-xl bg-forest px-4 py-3 text-sm font-semibold text-white transition hover:bg-forest-deep"
-              >
-                {replyLocale === "tanglish"
-                  ? `Aama — ${analysis.nicheLabel} correct`
-                  : `Yes — ${analysis.nicheLabel} is right`}
-              </button>
-              <p className="text-xs font-medium text-charcoal/55">
-                {replyLocale === "tanglish"
-                  ? "Illa correct niche choose pannunga:"
-                  : "Or pick the correct niche:"}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {allNicheOptions().map((n) => (
-                  <button
-                    key={n.id}
-                    type="button"
-                    onClick={() => correctNiche(n.id)}
-                    className={[
-                      "rounded-full border px-3 py-1.5 text-xs font-medium transition",
-                      analysis.nicheId === n.id
-                        ? "border-forest bg-forest/10 text-forest"
-                        : "border-charcoal/10 bg-white text-charcoal/70 hover:border-forest/30 hover:text-forest",
-                    ].join(" ")}
-                  >
-                    {n.label}
-                  </button>
-                ))}
+            {phase === "confirm_niche" && analysis && (
+              <div className="flex w-full max-w-md flex-col items-start gap-3">
+                <button
+                  type="button"
+                  onClick={confirmNicheCorrect}
+                  className="w-full rounded-xl bg-nemo px-4 py-3 text-sm font-semibold text-white transition hover:bg-nemo-deep"
+                >
+                  {replyLocale === "tanglish"
+                    ? `Aama — ${analysis.nicheLabel} correct`
+                    : `Yes — ${analysis.nicheLabel} is right`}
+                </button>
+                <p className="text-xs font-medium text-charcoal/55">
+                  {replyLocale === "tanglish"
+                    ? "Illa correct niche choose pannunga:"
+                    : "Or pick the correct niche:"}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {allNicheOptions().map((n) => (
+                    <button
+                      key={n.id}
+                      type="button"
+                      onClick={() => correctNiche(n.id)}
+                      className={[
+                        "rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                        analysis.nicheId === n.id
+                          ? "border-nemo bg-nemo/10 text-nemo-deep"
+                          : "border-ocean/15 bg-white text-charcoal/70 hover:border-ocean/40",
+                      ].join(" ")}
+                    >
+                      {n.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => resetToService()}
+                  className="text-xs font-semibold text-ocean hover:underline"
+                >
+                  Change service
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={resetToService}
-                className="text-xs font-semibold text-forest hover:underline"
-              >
-                Change service
-              </button>
-            </div>
-          )}
+            )}
 
-          {phase === "platform" && (
-            <div className="flex flex-col items-start gap-2">
-              <SelectionPanel
-                options={PLATFORM_OPTIONS.map((p) => ({
-                  id: p.id,
-                  label: p.label,
-                  hint: p.hint,
-                }))}
-                selected={platformSelected}
-                multi={false}
-                onToggle={togglePlatform}
-                onClear={() => setPlatformSelected([])}
-                onConfirm={confirmPlatform}
-                confirmDisabled={platformSelected.length === 0}
-              />
-              <button
-                type="button"
-                onClick={resetToService}
-                className="text-xs font-semibold text-forest hover:underline"
-              >
-                Change service
-              </button>
-            </div>
-          )}
-
-          {phase === "outcomes" && (
-            <div className="flex flex-col items-start gap-2">
-              <SelectionPanel
-                title="Common needs are pre-selected — adjust for this client"
-                options={outcomeOptions.map((o) => ({
-                  id: o.id,
-                  label: o.label,
-                  hint: o.common ? "Common for this niche" : undefined,
-                }))}
-                selected={outcomeSelected}
-                multi
-                onToggle={toggleOutcome}
-                onSelectAll={() => setOutcomeSelected(outcomeOptions.map((o) => o.id))}
-                onClear={() => setOutcomeSelected([])}
-                onConfirm={confirmOutcomes}
-                confirmDisabled={outcomeSelected.length === 0}
-                confirmLabel="Continue to packages"
-              />
-              <button
-                type="button"
-                onClick={resetToService}
-                className="text-xs font-semibold text-forest hover:underline"
-              >
-                Change service
-              </button>
-            </div>
-          )}
-
-          <div ref={bottomRef} />
-        </div>
-
-        <div className="border-t border-charcoal/8 bg-white px-4 py-4 sm:px-5">
-          {phase === "service" && (
-            <div className="mb-3 space-y-2">
-              <div className="flex flex-wrap gap-2">
-                {CHAT_QUICK_ACTIONS.map((action) => (
-                  <button
-                    key={action.label}
-                    type="button"
-                    onClick={() =>
-                      handleUserMessage(action.message, { skipUserBubble: false })
-                    }
-                    className="rounded-full border border-forest/25 bg-forest/5 px-3 py-1.5 text-xs font-semibold text-forest transition hover:border-forest/40"
-                  >
-                    {action.label}
-                  </button>
-                ))}
+            {phase === "platform" && (
+              <div className="flex w-full flex-col items-start gap-2">
+                <SelectionPanel
+                  options={PLATFORM_OPTIONS.map((p) => ({
+                    id: p.id,
+                    label: p.label,
+                    hint: p.hint,
+                  }))}
+                  selected={platformSelected}
+                  multi={false}
+                  onToggle={togglePlatform}
+                  onClear={() => setPlatformSelected([])}
+                  onConfirm={confirmPlatform}
+                  confirmDisabled={platformSelected.length === 0}
+                />
+                <button
+                  type="button"
+                  onClick={() => resetToService()}
+                  className="text-xs font-semibold text-ocean hover:underline"
+                >
+                  Change service
+                </button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {SERVICE_SUGGESTIONS.map((hint) => (
-                  <button
-                    key={hint}
-                    type="button"
-                    onClick={() => void beginWithService(hint, true)}
-                    className="rounded-full border border-charcoal/10 bg-sage-soft/50 px-3 py-1.5 text-xs font-medium text-charcoal/70 transition hover:border-forest/30 hover:text-forest"
-                  >
-                    {hint}
-                  </button>
-                ))}
+            )}
+
+            {phase === "outcomes" && (
+              <div className="flex w-full flex-col items-start gap-2">
+                <SelectionPanel
+                  title="Common needs are pre-selected — adjust for this client"
+                  options={outcomeOptions.map((o) => ({
+                    id: o.id,
+                    label: o.label,
+                    hint: o.common ? "Common for this niche" : undefined,
+                  }))}
+                  selected={outcomeSelected}
+                  multi
+                  onToggle={toggleOutcome}
+                  onSelectAll={() => setOutcomeSelected(outcomeOptions.map((o) => o.id))}
+                  onClear={() => setOutcomeSelected([])}
+                  onConfirm={confirmOutcomes}
+                  confirmDisabled={outcomeSelected.length === 0}
+                  confirmLabel="Continue to packages"
+                />
+                <button
+                  type="button"
+                  onClick={() => resetToService()}
+                  className="text-xs font-semibold text-ocean hover:underline"
+                >
+                  Change service
+                </button>
               </div>
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="flex gap-2">
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              disabled={inputDisabled}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={
-                inputDisabled
-                  ? "Use the options above to continue…"
-                  : "e.g. Coffee shop"
-              }
-              className="min-w-0 flex-1 rounded-full border border-charcoal/10 bg-sage-soft/40 px-5 py-3.5 text-base outline-none transition placeholder:text-charcoal/35 focus:border-forest/40 focus:bg-white focus:ring-4 focus:ring-forest/10 disabled:cursor-not-allowed disabled:opacity-60"
-            />
-            <button
-              type="submit"
-              disabled={inputDisabled}
-              className="shrink-0 rounded-full bg-forest px-5 py-3.5 text-sm font-semibold text-white shadow-md shadow-forest/20 transition hover:bg-forest-deep disabled:cursor-not-allowed disabled:bg-charcoal/25 disabled:shadow-none"
+            )}
+
+            {phase === "service" && (
+              <div className="pt-1">
+                <p className="mb-2 text-xs font-medium text-charcoal/45">
+                  You might want to explore:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {EXPLORE_CHIPS.map((chip) => (
+                    <button
+                      key={chip.label}
+                      type="button"
+                      onClick={() => handleUserMessage(chip.message)}
+                      className="rounded-full border border-nemo/50 bg-white px-3.5 py-1.5 text-xs font-semibold text-nemo transition hover:bg-nemo/10"
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div ref={bottomRef} />
+          </div>
+
+          <div className="nemo-chat-composer px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 sm:py-4 lg:px-8">
+            <form
+              onSubmit={handleSubmit}
+              className="flex w-full items-center gap-2.5"
             >
-              Send
-            </button>
-          </form>
-          {error && <p className="mt-2 text-sm font-medium text-red-700">{error}</p>}
-        </div>
-      </div>
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                disabled={inputDisabled}
+                onChange={(e) => {
+                  historyIndexRef.current = -1;
+                  setInput(e.target.value);
+                }}
+                onKeyDown={handleInputKeyDown}
+                placeholder={
+                  inputDisabled
+                    ? "Use the options above to continue…"
+                    : "Type your message..."
+                }
+                className="min-w-0 flex-1 rounded-full border border-charcoal/10 bg-[#f7fafc] px-5 py-3.5 text-base outline-none transition placeholder:text-charcoal/35 focus:border-ocean/30 focus:bg-white focus:ring-4 focus:ring-ocean/10 disabled:opacity-60"
+                autoComplete="off"
+              />
+              <button
+                type="submit"
+                disabled={inputDisabled || !input.trim()}
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-nemo text-white shadow-md shadow-nemo/30 transition hover:bg-nemo-deep disabled:cursor-not-allowed disabled:bg-charcoal/25 disabled:shadow-none"
+                aria-label="Send"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M4 12L20 4L13 20L11 13L4 12Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </button>
+            </form>
+            {error && (
+              <p className="mt-2 text-sm font-medium text-red-700">{error}</p>
+            )}
+          </div>
+      </section>
     </div>
   );
 }

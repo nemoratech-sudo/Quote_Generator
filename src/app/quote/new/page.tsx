@@ -73,17 +73,11 @@ function NewQuoteContent() {
     draft.service.trim().length > 0 &&
     (draft.requirementTags.length > 0 || draft.outcomeIds.length > 0 || draft.productType !== null);
 
-  return (
-    <>
-      <div className="mb-8 sm:mb-10">
-        <Stepper
-          current={draft.step === "quote" ? "package" : draft.step}
-          serviceReady={chatDone || draft.step === "package"}
-          packageReady={draft.packageId !== null}
-        />
-      </div>
+  const isChat = draft.step === "chat";
 
-      {draft.step === "chat" && (
+  if (isChat) {
+    return (
+      <div className="nemo-atmosphere flex flex-col">
         <ChatService
           initialService={draft.service}
           onComplete={(result) => {
@@ -99,42 +93,51 @@ function NewQuoteContent() {
             router.replace("/quote/new?step=package");
           }}
         />
-      )}
+      </div>
+    );
+  }
 
-      {draft.step === "package" && (
-        <PackageCards
-          selected={draft.packageId}
-          serviceLabel={titleCaseService(draft.service)}
-          requirementTags={draft.requirementTags}
-          optimizeForRequirements={draft.optimizeForRequirements}
-          onSelect={(packageId: PackageId) => updateDraft({ packageId })}
-          onGenerate={() => {
-            if (!draft.packageId) return;
-            clearWorkingQuote();
-            updateDraft({ step: "quote" });
-            router.push("/quote/preview");
-          }}
-        />
-      )}
-    </>
+  return (
+    <div className="page-atmosphere">
+      <SiteHeader compact />
+      <main className="mx-auto w-full max-w-6xl px-5 pb-20 pt-4 sm:px-8">
+        <div className="mb-8 sm:mb-10">
+          <Stepper
+            current={draft.step === "quote" ? "package" : draft.step}
+            serviceReady={chatDone || draft.step === "package"}
+            packageReady={draft.packageId !== null}
+          />
+        </div>
+        {draft.step === "package" && (
+          <PackageCards
+            selected={draft.packageId}
+            serviceLabel={titleCaseService(draft.service)}
+            requirementTags={draft.requirementTags}
+            optimizeForRequirements={draft.optimizeForRequirements}
+            onSelect={(packageId: PackageId) => updateDraft({ packageId })}
+            onGenerate={() => {
+              if (!draft.packageId) return;
+              clearWorkingQuote();
+              updateDraft({ step: "quote" });
+              router.push("/quote/preview");
+            }}
+          />
+        )}
+      </main>
+    </div>
   );
 }
 
 export default function NewQuotePage() {
   return (
-    <div className="page-atmosphere">
-      <SiteHeader compact />
-      <main className="mx-auto w-full max-w-6xl px-5 pb-20 pt-4 sm:px-8">
-        <Suspense
-          fallback={
-            <div className="flex min-h-[40vh] items-center justify-center text-charcoal/50">
-              Loading…
-            </div>
-          }
-        >
-          <NewQuoteContent />
-        </Suspense>
-      </main>
-    </div>
+    <Suspense
+      fallback={
+        <div className="nemo-atmosphere flex min-h-[40vh] items-center justify-center text-white/80">
+          Loading…
+        </div>
+      }
+    >
+      <NewQuoteContent />
+    </Suspense>
   );
 }

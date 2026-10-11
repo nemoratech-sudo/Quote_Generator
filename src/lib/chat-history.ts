@@ -1,6 +1,6 @@
 import type { ChatLocale } from "./reply-locale";
 
-const STORAGE_KEY = "nemora-chat-history-v1";
+const STORAGE_KEY = "nemora-chat-history-v2";
 
 export interface PersistedChatMessage {
   id: string;
@@ -8,6 +8,8 @@ export interface PersistedChatMessage {
   text: string;
   /** Inline tappable business picker under this bot message */
   picker?: "services";
+  /** Epoch ms — optional for older saved histories */
+  at?: number;
 }
 
 export interface PersistedChatState {
@@ -19,7 +21,7 @@ export interface PersistedChatState {
 const WELCOME_EN: PersistedChatMessage = {
   id: "welcome",
   role: "bot",
-  text: "Hi — I’m Nemora’s quote assistant. What business should we quote for?\n\nTap Help or List all services, or type a business (e.g. Coffee shop).",
+  text: "What business should we quote for?\n\nTap a suggestion on the left, or type a business (e.g. Coffee shop).",
 };
 
 export function defaultChatMessages(): PersistedChatMessage[] {

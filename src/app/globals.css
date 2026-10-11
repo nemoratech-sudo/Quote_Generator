@@ -10,6 +10,13 @@
   --charcoal: #1f2933;
   --background: #eefaf1;
   --foreground: #1f2933;
+  /* Nemo chat palette — ocean + clownfish orange */
+  --ocean: #0a3d62;
+  --ocean-deep: #062a45;
+  --nemo: #ff6b1a;
+  --nemo-deep: #e55a0f;
+  --sky-mist: #d6eaf8;
+  --chat-ivory: #f7fbfe;
 }
 
 @theme inline {
@@ -22,6 +29,12 @@
   --color-gold: var(--gold);
   --color-gold-deep: var(--gold-deep);
   --color-charcoal: var(--charcoal);
+  --color-ocean: var(--ocean);
+  --color-ocean-deep: var(--ocean-deep);
+  --color-nemo: var(--nemo);
+  --color-nemo-deep: var(--nemo-deep);
+  --color-sky-mist: var(--sky-mist);
+  --color-chat-ivory: var(--chat-ivory);
   --font-sans: var(--font-dm-sans);
   --font-serif: var(--font-cormorant);
 }
@@ -43,6 +56,112 @@ body {
     radial-gradient(ellipse 40% 35% at 0% 80%, rgba(27, 67, 50, 0.08), transparent 45%),
     linear-gradient(180deg, #f4fbf6 0%, #eefaf1 45%, #e8f6ec 100%);
   min-height: 100vh;
+}
+
+/* Full-screen chat shell — edge to edge, no page scroll */
+.nemo-atmosphere {
+  height: 100dvh;
+  max-height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+  background: #fff;
+  color: #1f2933;
+}
+
+/* Chat column fills remaining viewport under the top bar */
+.nemo-chat-pane {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  background: #f7fafc;
+}
+
+.nemo-chat-scroll {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(10, 61, 98, 0.35) transparent;
+}
+
+.nemo-chat-composer {
+  flex: 0 0 auto;
+  width: 100%;
+  border-top: 1px solid #d6eaf8;
+  background: #fff;
+}
+
+/* Analyzing loader: fish only — no pill / frame */
+.nemo-swim-stage {
+  position: relative;
+  width: 6.5rem;
+  height: 2rem;
+  overflow: visible;
+  background: transparent;
+  border: none;
+}
+
+.nemo-swim-stage img {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-top: -0.875rem;
+  object-fit: contain;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  animation: nemo-fish-swim 2.4s linear infinite;
+  will-change: transform;
+}
+
+@keyframes nemo-fish-swim {
+  0% {
+    transform: translateX(0) translateY(0) scaleX(1);
+  }
+  12% {
+    transform: translateX(1rem) translateY(-3px) scaleX(1);
+  }
+  25% {
+    transform: translateX(2.25rem) translateY(2px) scaleX(1);
+  }
+  40% {
+    transform: translateX(4rem) translateY(-2px) scaleX(1);
+  }
+  48% {
+    transform: translateX(4.75rem) translateY(0) scaleX(1);
+  }
+  50% {
+    transform: translateX(4.75rem) translateY(0) scaleX(-1);
+  }
+  62% {
+    transform: translateX(3.5rem) translateY(-3px) scaleX(-1);
+  }
+  75% {
+    transform: translateX(1.75rem) translateY(2px) scaleX(-1);
+  }
+  90% {
+    transform: translateX(0.25rem) translateY(-1px) scaleX(-1);
+  }
+  100% {
+    transform: translateX(0) translateY(0) scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nemo-swim-stage img {
+    animation: none;
+  }
 }
 
 @media print {
