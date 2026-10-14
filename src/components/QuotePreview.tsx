@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   createLineItemId,
@@ -13,6 +13,7 @@ import {
   STATUS_LABELS,
   withRecalculatedTotal,
 } from "@/lib/quote";
+import { downloadQuotePdf } from "@/lib/download-quote-pdf";
 import { platformLabel } from "@/lib/outcomes";
 import { tagsLabelList } from "@/lib/requirements";
 import type { Quote, QuoteLineItem, QuoteStatus } from "@/lib/types";
@@ -65,6 +66,8 @@ export default function QuotePreview({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [clientError, setClientError] = useState("");
   const [touchedClient, setTouchedClient] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const sheetRef = useRef<HTMLElement>(null);
 
   const locked = quote.status === "accepted";
   const canEdit = editable && typeof onChange === "function" && !locked;
@@ -73,13 +76,20 @@ export default function QuotePreview({
     [quote.totalAmount, quote.advancePercent],
   );
 
+  const mobileDigits = (quote.mobile ?? "").replace(/\D/g, "");
   const missingClientName = !quote.clientName.trim();
-  const missingMobile = !(quote.mobile ?? "").trim();
-  const clientInvalid = missingClientName || missingMobile;
+  const missingMobile = mobileDigits.length === 0;
+  const mobileInvalid = mobileDigits.length > 0 && mobileDigits.length !== 10;
+  const clientInvalid = missingClientName || missingMobile || mobileInvalid;
 
   function commit(next: Quote) {
     onChange?.(withRecalculatedTotal(next));
-    if (clientError && next.clientName.trim() && (next.mobile ?? "").trim()) {
+    const nextMobile = (next.mobile ?? "").replace(/\D/g, "");
+    if (
+      clientError &&
+      next.clientName.trim() &&
+      nextMobile.length === 10
+    ) {
       setClientError("");
     }
   }
@@ -90,8 +100,13 @@ export default function QuotePreview({
       setClientError("Client name is required.");
       return false;
     }
-    if (!(quote.mobile ?? "").trim()) {
+    const digits = (quote.mobile ?? "").replace(/\D/g, "");
+    if (!digits) {
       setClientError("Mobile number is required.");
+      return false;
+    }
+    if (digits.length !== 10) {
+      setClientError("Mobile number must be 10 digits.");
       return false;
     }
     setClientError("");
@@ -164,9 +179,21 @@ export default function QuotePreview({
     setDragIndex(null);
   }
 
-  function handlePrint() {
+  async function handleDownloadPdf() {
     if (canEdit && !requireClientDetails()) return;
-    window.print();
+    const sheet = sheetRef.current;
+    if (!sheet || downloadingPdf) return;
+
+    setDownloadingPdf(true);
+    sheet.dataset.exporting = "true";
+    try {
+      await downloadQuotePdf(sheet, quote);
+    } catch {
+      setClientError("Could not create PDF. Try again.");
+    } finally {
+      delete sheet.dataset.exporting;
+      setDownloadingPdf(false);
+    }
   }
 
   function handleSaveClick() {
@@ -283,16 +310,20 @@ export default function QuotePreview({
             )}
             <button
               type="button"
-              onClick={handlePrint}
-              className="rounded-full bg-forest px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-forest/20 transition hover:bg-forest-deep"
+              onClick={() => void handleDownloadPdf()}
+              disabled={downloadingPdf}
+              className="rounded-full bg-forest px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-forest/20 transition hover:bg-forest-deep disabled:cursor-wait disabled:opacity-70"
             >
-              Download PDF
+              {downloadingPdf ? "Preparing PDF…" : "Download PDF"}
             </button>
           </div>
         </div>
       )}
 
-      <article className="quote-sheet overflow-hidden rounded-2xl border border-charcoal/8 bg-white shadow-[0_30px_80px_-40px_rgba(27,67,50,0.55)] print:rounded-none print:border-0 print:shadow-none">
+      <article
+        ref={sheetRef}
+        className="quote-sheet overflow-hidden rounded-2xl border border-charcoal/8 bg-white shadow-[0_30px_80px_-40px_rgba(27,67,50,0.55)] print:rounded-none print:border-0 print:shadow-none"
+      >
         {/* Header — sage → cream */}
         <div className="quote-header border-b border-[#E5EFE8] bg-gradient-to-r from-[#EEFAF1] via-white to-[#FFF8E8] px-7 py-8 sm:px-10">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -388,15 +419,22 @@ export default function QuotePreview({
                   </span>
                   <input
                     type="tel"
+                    inputMode="numeric"
                     required
+                    maxLength={10}
                     value={quote.mobile}
-                    onChange={(e) => commit({ ...quote, mobile: e.target.value })}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                      commit({ ...quote, mobile: digits });
+                    }}
                     onBlur={() => setTouchedClient(true)}
-                    placeholder="Mobile number"
-                    aria-invalid={touchedClient && missingMobile}
+                    placeholder="10-digit mobile"
+                    aria-invalid={
+                      touchedClient && (missingMobile || mobileInvalid)
+                    }
                     className={[
                       "w-full rounded-xl border bg-sage-soft/40 px-3 py-2.5 outline-none focus:bg-white",
-                      touchedClient && missingMobile
+                      touchedClient && (missingMobile || mobileInvalid)
                         ? "border-red-400 focus:border-red-500"
                         : "border-charcoal/10 focus:border-forest/30",
                     ].join(" ")}
@@ -416,7 +454,9 @@ export default function QuotePreview({
                     {clientError ||
                       (missingClientName
                         ? "Client name is required."
-                        : "Mobile number is required.")}
+                        : missingMobile
+                          ? "Mobile number is required."
+                          : "Mobile number must be 10 digits.")}
                   </p>
                 )}
               </div>

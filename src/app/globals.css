@@ -224,3 +224,39 @@ body {
     display: none !important;
   }
 }
+
+/* PDF capture (html2canvas) — mirror print layout without print dialog */
+.quote-sheet[data-exporting="true"] {
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+
+.quote-sheet[data-exporting="true"] .print\:hidden {
+  display: none !important;
+}
+
+.quote-sheet[data-exporting="true"] .print\:block {
+  display: block !important;
+}
+
+.quote-sheet[data-exporting="true"] .print\:flex {
+  display: flex !important;
+}
+
+.quote-sheet[data-exporting="true"] .print\:table {
+  display: table !important;
+}
+
+.quote-sheet[data-exporting="true"] input,
+.quote-sheet[data-exporting="true"] button,
+.quote-sheet[data-exporting="true"] form,
+.quote-sheet[data-exporting="true"] label:has(input[type="checkbox"]) {
+  display: none !important;
+}
+
+.quote-sheet[data-exporting="true"] .quote-total-card {
+  background: #1b4332 !important;
+  color: #fff !important;
+}
