@@ -45,6 +45,7 @@ function NewQuoteContent() {
     if (!loaded.mobile) loaded.mobile = "";
     if (loaded.productType === undefined) loaded.productType = null;
     if (!Array.isArray(loaded.outcomeIds)) loaded.outcomeIds = [];
+    if (loaded.nicheId === undefined) loaded.nicheId = null;
 
     const step = resolveStep(loaded, searchParams.get("step"));
     loaded.step = step === "quote" ? "package" : step;
@@ -88,6 +89,7 @@ function NewQuoteContent() {
               optimizeForRequirements: true,
               productType: result.productType,
               outcomeIds: result.outcomeIds,
+              nicheId: result.nicheId ?? null,
               step: "package",
             });
             router.replace("/quote/new?step=package");

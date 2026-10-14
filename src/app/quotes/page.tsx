@@ -35,6 +35,7 @@ function draftFromQuote(quote: Quote) {
     optimizeForRequirements: true,
     productType: quote.productType ?? null,
     outcomeIds: quote.outcomeIds ?? [],
+    nicheId: quote.nicheId ?? null,
   };
 }
 

@@ -138,6 +138,7 @@ export default function QuotePreviewPage() {
       optimizeForRequirements: true,
       productType: revision.productType,
       outcomeIds: revision.outcomeIds,
+      nicheId: revision.nicheId ?? null,
     });
     setQuote(revision);
     setSavedFingerprint(quotesFingerprint(revision));

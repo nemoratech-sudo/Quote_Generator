@@ -1,6 +1,7 @@
 import { formatINR, parseMoney, percentOf } from "./money";
 import { DEFAULT_PACKAGES, getPackageById, loadPackages } from "./packages";
 import { optimizeLineItems } from "./requirements";
+import { getCommonTerms, resolveQuoteTerms } from "./terms";
 import type {
   Package,
   PackageId,
@@ -12,20 +13,17 @@ import type {
 } from "./types";
 import { loadSettings } from "./settings";
 
+export { resolveQuoteTerms };
+export { getCommonTerms as DEFAULT_TERMS_COMMON } from "./terms";
+
 export const COMPANY_NAME = "Nemora" as const;
 export const PAYMENT_TERMS = "40% advance / 60% on delivery";
 export const VALIDITY_DAYS = 15;
 export const ADVANCE_PERCENT = 40;
 export const DELIVERY_PERCENT = 60;
 
-export const DEFAULT_TERMS: string[] = [
-  "This quotation is valid for the period stated above unless extended in writing by Nemora.",
-  "Work begins after receipt of the advance payment as per the payment terms.",
-  "Scope is limited to the deliverables listed. Additional features will be quoted separately.",
-  "Client shall provide required content, branding assets, and feedback within agreed timelines.",
-  "Final files / website access are handed over after clearance of the remaining balance.",
-  "Nemora retains ownership of unused design concepts; licensed deliverables transfer on full payment.",
-];
+/** Common-only fallback; prefer resolveQuoteTerms for niche-aware T&Cs */
+export const DEFAULT_TERMS: string[] = getCommonTerms();
 
 /** @deprecated use loadPackages() — kept for PackageCards SSR fallback */
 export const packages = DEFAULT_PACKAGES;
@@ -58,6 +56,7 @@ export function createEmptyDraft(): QuoteDraft {
     optimizeForRequirements: true,
     productType: null,
     outcomeIds: [],
+    nicheId: null,
   };
 }
 
@@ -195,6 +194,7 @@ export function buildQuote(draft: QuoteDraft, quoteId?: string): Quote {
     statusUpdatedAt: createdAt,
     productType: draft.productType ?? null,
     outcomeIds: draft.outcomeIds ?? [],
+    nicheId: draft.nicheId ?? null,
   };
 
   return withRecalculatedTotal(quote);
@@ -315,6 +315,7 @@ export function normalizeQuote(raw: Partial<Quote> & { features?: unknown[] }): 
     statusUpdatedAt: raw.statusUpdatedAt ?? createdAt,
     productType: raw.productType ?? null,
     outcomeIds: Array.isArray(raw.outcomeIds) ? raw.outcomeIds : [],
+    nicheId: raw.nicheId ?? null,
   };
 
   return withRecalculatedTotal(base);
@@ -341,6 +342,8 @@ export function quotesFingerprint(quote: Quote): string {
     status: quote.status,
     briefNotes: quote.briefNotes,
     requirementTags: quote.requirementTags,
+    nicheId: quote.nicheId,
+    packageId: quote.packageId,
   });
 }
 

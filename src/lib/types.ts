@@ -48,6 +48,8 @@ export interface QuoteDraft {
   optimizeForRequirements: boolean;
   productType: ProductType | null;
   outcomeIds: string[];
+  /** Business niche from chat (salon, cafe, …) — drives niche T&Cs */
+  nicheId: string | null;
 }
 
 export interface QuoteLineItem {
@@ -88,6 +90,8 @@ export interface Quote {
   statusUpdatedAt: string;
   productType: ProductType | null;
   outcomeIds: string[];
+  /** Business niche from chat (salon, cafe, …) — drives niche T&Cs */
+  nicheId: string | null;
 }
 
 export interface AppSettings {

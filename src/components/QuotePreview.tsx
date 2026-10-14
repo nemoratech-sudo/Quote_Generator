@@ -4,12 +4,12 @@ import { FormEvent, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   createLineItemId,
-  DEFAULT_TERMS,
   formatINR,
   formatQuoteDate,
   moveLineItem,
   paymentSplit,
   resetQuoteToPackage,
+  resolveQuoteTerms,
   STATUS_LABELS,
   withRecalculatedTotal,
 } from "@/lib/quote";
@@ -74,6 +74,16 @@ export default function QuotePreview({
   const split = useMemo(
     () => paymentSplit(quote.totalAmount, quote.advancePercent),
     [quote.totalAmount, quote.advancePercent],
+  );
+
+  const terms = useMemo(
+    () =>
+      resolveQuoteTerms({
+        nicheId: quote.nicheId,
+        packageId: quote.packageId,
+        service: quote.service,
+      }),
+    [quote.nicheId, quote.packageId, quote.service],
   );
 
   const mobileDigits = (quote.mobile ?? "").replace(/\D/g, "");
@@ -728,7 +738,7 @@ export default function QuotePreview({
               Terms and conditions
             </h4>
             <ol className="mt-4 list-decimal space-y-2.5 pl-4 text-[13px] leading-relaxed text-charcoal/70">
-              {DEFAULT_TERMS.map((term) => (
+              {terms.map((term) => (
                 <li key={term}>{term}</li>
               ))}
             </ol>

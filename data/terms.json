@@ -1,0 +1,77 @@
+{
+  "common": [
+    "This quotation is valid for the period stated above unless extended in writing by Nemora.",
+    "Work begins after receipt of the advance payment as per the payment terms.",
+    "Scope is limited to the deliverables listed. Additional features will be quoted separately.",
+    "Client shall provide required content, branding assets, and feedback within agreed timelines.",
+    "Final files / website access are handed over after clearance of the remaining balance.",
+    "Nemora retains ownership of unused design concepts; licensed deliverables transfer on full payment."
+  ],
+  "niches": {
+    "salon": [
+      "Service menus, staff photos, and price lists must be provided and approved by the client before go-live.",
+      "Online booking or appointment tools only cover what is listed in scope; SMS/WhatsApp gateway fees are extra unless included.",
+      "Nemora is not responsible for missed appointments, staff scheduling, or salon operational decisions made via the site."
+    ],
+    "cafe": [
+      "Menu items, prices, and allergen notes are the client's responsibility and must be kept accurate.",
+      "Food photography rights remain with the client; Nemora uses only assets the client supplies or licenses.",
+      "Online ordering or payment flows are included only if listed in the scope above."
+    ],
+    "clinic": [
+      "The website does not provide medical advice; all clinical content must be approved by the client.",
+      "Doctor profiles, timings, and credentials must be verified by the client before publication.",
+      "Appointment or enquiry forms are informational unless a booking system is explicitly included in scope."
+    ],
+    "shop": [
+      "Product names, prices, and stock accuracy are maintained by the client after handover.",
+      "Payment gateway charges, GST filings, and shipping rules remain the client's responsibility.",
+      "Returns / refund policy text must be provided by the client if shown on the site."
+    ],
+    "gym": [
+      "Membership plans, class schedules, and trainer profiles must be supplied and approved by the client.",
+      "Nemora is not liable for injuries or fitness outcomes related to content published on the site.",
+      "Class booking or membership payment features are included only if listed in scope."
+    ],
+    "education": [
+      "Course details, fees, and batch schedules must be provided and verified by the client.",
+      "Student data collected via forms will be handled as directed by the client; compliance is the client's duty.",
+      "Learning portals, live classes, or payment for courses are included only if listed in scope."
+    ],
+    "realestate": [
+      "Property listings, pricing, and legal disclosures must be accurate and provided by the client.",
+      "Nemora does not broker deals or verify land titles; the site is a marketing showcase only unless otherwise scoped.",
+      "Lead forms deliver enquiries to the client; follow-up and RERA compliance remain the client's responsibility."
+    ],
+    "bakery": [
+      "Product catalogues, cake prices, and seasonal menus must be supplied by the client.",
+      "Custom order / delivery workflows are included only if listed in the scope above.",
+      "Food safety claims and labelling on the site are the client's responsibility."
+    ],
+    "yoga": [
+      "Class schedules, teacher bios, and fee structures must be provided and approved by the client.",
+      "Wellness content is informational; Nemora is not liable for health outcomes from published guidance.",
+      "Online booking or membership payments are included only if listed in scope."
+    ],
+    "logistics": [
+      "Service areas, rates, and SLA text must be supplied by the client and kept up to date.",
+      "Tracking or courier integrations are included only if listed in the scope above.",
+      "Nemora is not liable for shipment delays or losses handled by the client's operations."
+    ],
+    "temple": [
+      "Event notices, donation purposes, and trust details must be approved by authorised temple / trust representatives.",
+      "Online donation or seva booking features are included only if listed in scope; payment gateway fees are extra unless included.",
+      "Religious content accuracy and community communications remain the client's responsibility."
+    ],
+    "pg": [
+      "Room types, rents, deposits, and house rules must be provided accurately by the client.",
+      "Tenant enquiries via forms are passed to the client; screening and agreements remain the client's duty.",
+      "Booking or rent-payment features are included only if listed in the scope above."
+    ]
+  },
+  "packages": {
+    "premium": [
+      "Where hosting is included, it covers the period stated in scope (typically 12 months from go-live); renewal is billed separately unless agreed in writing."
+    ]
+  }
+}

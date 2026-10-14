@@ -51,6 +51,7 @@ export default function SavedQuoteDetailPage() {
       optimizeForRequirements: true,
       productType: found.productType ?? null,
       outcomeIds: found.outcomeIds ?? [],
+      nicheId: found.nicheId ?? null,
     });
   }, [id]);
 
@@ -95,6 +96,7 @@ export default function SavedQuoteDetailPage() {
       optimizeForRequirements: true,
       productType: revision.productType,
       outcomeIds: revision.outcomeIds,
+      nicheId: revision.nicheId ?? null,
     });
     router.push(`/quotes/${encodeURIComponent(revision.id)}`);
   }

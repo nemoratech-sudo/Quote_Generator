@@ -23,6 +23,7 @@ export default function HomePage() {
       optimizeForRequirements: true,
       productType: result.productType,
       outcomeIds: result.outcomeIds,
+      nicheId: result.nicheId ?? null,
     });
     router.push("/quote/new?step=package");
   }

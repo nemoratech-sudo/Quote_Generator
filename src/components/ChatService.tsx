@@ -55,6 +55,7 @@ export interface ChatQuoteResult {
   outcomeIds: string[];
   requirementTags: RequirementTagId[];
   briefNotes: string;
+  nicheId: string | null;
 }
 
 interface ChatServiceProps {
@@ -500,6 +501,7 @@ export default function ChatService({ initialService = "", onComplete }: ChatSer
         outcomeIds: outcomeSelected,
         requirementTags: tags,
         briefNotes: `${platformLabel(productType)} · ${labels.join(", ")}`,
+        nicheId: analysis?.nicheId ?? null,
       });
     }, 500);
   }
