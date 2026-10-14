@@ -181,17 +181,16 @@ export default function QuotePreview({
 
   async function handleDownloadPdf() {
     if (canEdit && !requireClientDetails()) return;
-    const sheet = sheetRef.current;
-    if (!sheet || downloadingPdf) return;
+    if (downloadingPdf) return;
 
     setDownloadingPdf(true);
-    sheet.dataset.exporting = "true";
     try {
-      await downloadQuotePdf(sheet, quote);
-    } catch {
+      await downloadQuotePdf(sheetRef.current, quote);
+      setClientError("");
+    } catch (err) {
+      console.error("PDF download failed:", err);
       setClientError("Could not create PDF. Try again.");
     } finally {
-      delete sheet.dataset.exporting;
       setDownloadingPdf(false);
     }
   }
